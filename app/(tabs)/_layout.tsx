@@ -1,33 +1,55 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarActiveTintColor: '#FF00FF',
+        tabBarInactiveTintColor: '#666666',
+        tabBarStyle: {
+          height: 70,
+          paddingBottom: 8,
+          paddingTop: 8,
+          backgroundColor: '#FFFFFF',
+        },
+        tabBarLabelStyle: {
+          fontWeight: '700',
+          fontSize: 11,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: '플레이리스트',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="playlist-music" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: '검색',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="magnify" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reservation"
+        options={{
+          title: '선곡 예약리스트',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="playlist-plus" size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          href: null,
         }}
       />
     </Tabs>
