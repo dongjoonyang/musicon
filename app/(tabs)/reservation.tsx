@@ -164,7 +164,7 @@ export default function ReservationScreen() {
   };
 
   const confirmDelete = (reservation: Reservation) => {
-    Alert.alert('삭제 확인', `"${reservation.title}" 예약 요청을 삭제할까요?`, [
+    Alert.alert('삭제 확인', `"${reservation.title}" 알림을 삭제할까요?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',
@@ -188,8 +188,8 @@ export default function ReservationScreen() {
     <AppScreen>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.title}>선곡예약 리스트</Text>
-          <Text style={styles.subtitle}>TJ 미등록 곡을 등록 알림 대상으로 관리합니다.</Text>
+          <Text style={styles.title}>신곡 알림</Text>
+          <Text style={styles.subtitle}>TJ에 등록되면 푸시 알림을 보내드립니다.</Text>
         </View>
         <PinkButton label="추가" onPress={openCreateSheet} />
       </View>
@@ -232,7 +232,7 @@ export default function ReservationScreen() {
 
           {!reservations.length ? (
             <View style={styles.emptyWrap}>
-              <Text style={styles.emptyTitle}>예약 요청이 없습니다.</Text>
+              <Text style={styles.emptyTitle}>등록된 알림이 없습니다.</Text>
               <Text style={styles.emptyDesc}>우측 상단 추가 버튼으로 아티스트/제목을 등록하세요.</Text>
             </View>
           ) : null}
@@ -244,7 +244,7 @@ export default function ReservationScreen() {
           <Pressable style={styles.dim} onPress={closeSheet} />
           <Animated.View style={[styles.sheet, { transform: [{ translateY: slideY }] }]}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>{mode === 'edit' ? '예약 요청 수정' : '예약 요청 추가'}</Text>
+            <Text style={styles.sheetTitle}>{mode === 'edit' ? '신곡 알림 수정' : '신곡 알림 추가'}</Text>
 
             <Text style={styles.fieldLabel}>아티스트</Text>
             <TextInput

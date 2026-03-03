@@ -40,9 +40,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reservation"
         options={{
-          title: '선곡 예약리스트',
+          title: '신곡 알림',
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="playlist-plus" size={24} color={color} />
+            <MaterialCommunityIcons name="bell-ring-outline" size={24} color={color} />
           ),
         }}
       />
