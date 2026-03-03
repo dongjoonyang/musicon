@@ -1,42 +1,91 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 
 import { AppScreen } from '@/components/music/app-screen';
 import { PinkButton } from '@/components/music/pink-button';
-import { useMusic } from '@/contexts/music-context';
-import type { ReservationRequest } from '@/types/music';
+import { usePushToken } from '@/contexts/push-token-context';
+import {
+  createReservation,
+  deleteReservation,
+  listReservations,
+  updateReservation,
+  type Reservation,
+} from '@/services/reservation-api';
 
 const SHEET_HEIGHT = 320;
 
 type FormMode = 'create' | 'edit';
 
 export default function ReservationScreen() {
-  const { reservationRequests, addReservationRequest, updateReservationRequest, removeReservationRequest } = useMusic();
+  const { expoPushToken } = usePushToken();
 
+  const isFocused = useIsFocused();
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
   const [mode, setMode] = useState<FormMode>('create');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [artist, setArtist] = useState('');
   const [title, setTitle] = useState('');
 
   const slideY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
   const editingTarget = useMemo(
-    () => reservationRequests.find((item) => item.id === editingId) ?? null,
-    [editingId, reservationRequests]
+    () => reservations.find((item) => item.id === editingId) ?? null,
+    [editingId, reservations]
   );
+
+  const fetchReservations = useCallback(async () => {
+    if (!expoPushToken) return;
+    setLoading(true);
+    try {
+      const res = await listReservations(expoPushToken);
+      if (res.success && res.data) {
+        setReservations(res.data);
+      }
+    } catch {
+      Alert.alert('오류', '예약 목록을 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }, [expoPushToken]);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchReservations();
+    }
+  }, [fetchReservations, isFocused]);
+
+  const onRefresh = useCallback(async () => {
+    if (!expoPushToken) return;
+    setRefreshing(true);
+    try {
+      const res = await listReservations(expoPushToken);
+      if (res.success && res.data) {
+        setReservations(res.data);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRefreshing(false);
+    }
+  }, [expoPushToken]);
 
   useEffect(() => {
     if (isSheetVisible) {
@@ -74,15 +123,15 @@ export default function ReservationScreen() {
     setIsSheetVisible(true);
   };
 
-  const openEditSheet = (request: ReservationRequest) => {
+  const openEditSheet = (reservation: Reservation) => {
     setMode('edit');
-    setEditingId(request.id);
-    setArtist(request.artist);
-    setTitle(request.title);
+    setEditingId(reservation.id);
+    setArtist(reservation.artist);
+    setTitle(reservation.title);
     setIsSheetVisible(true);
   };
 
-  const submitForm = () => {
+  const submitForm = async () => {
     const nextArtist = artist.trim();
     const nextTitle = title.trim();
 
@@ -91,26 +140,49 @@ export default function ReservationScreen() {
       return;
     }
 
-    if (mode === 'edit' && editingTarget) {
-      updateReservationRequest(editingTarget.id, { artist: nextArtist, title: nextTitle });
-      closeSheet();
+    if (!expoPushToken) {
+      Alert.alert('알림', '푸시 알림을 사용할 수 없는 환경입니다.');
       return;
     }
 
-    addReservationRequest({ artist: nextArtist, title: nextTitle });
+    if (mode === 'edit' && editingTarget) {
+      const res = await updateReservation(expoPushToken, editingTarget.id, nextArtist, nextTitle);
+      if (!res.success) {
+        Alert.alert('오류', '예약 수정에 실패했습니다.');
+        return;
+      }
+    } else {
+      const res = await createReservation(expoPushToken, nextArtist, nextTitle);
+      if (!res.success) {
+        Alert.alert('오류', '예약 등록에 실패했습니다.');
+        return;
+      }
+    }
+
     closeSheet();
+    fetchReservations();
   };
 
-  const confirmDelete = (request: ReservationRequest) => {
-    Alert.alert('삭제 확인', `"${request.title}" 예약 요청을 삭제할까요?`, [
+  const confirmDelete = (reservation: Reservation) => {
+    Alert.alert('삭제 확인', `"${reservation.title}" 예약 요청을 삭제할까요?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',
         style: 'destructive',
-        onPress: () => removeReservationRequest(request.id),
+        onPress: async () => {
+          if (!expoPushToken) return;
+          const res = await deleteReservation(expoPushToken, reservation.id);
+          if (res.success) {
+            fetchReservations();
+          } else {
+            Alert.alert('오류', '예약 삭제에 실패했습니다.');
+          }
+        },
       },
     ]);
   };
+
+  const isMatched = (reservation: Reservation) => reservation.status === 'matched';
 
   return (
     <AppScreen>
@@ -122,37 +194,50 @@ export default function ReservationScreen() {
         <PinkButton label="추가" onPress={openCreateSheet} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.listContent}>
-        {reservationRequests.map((request) => (
-          <View key={request.id} style={styles.requestCard}>
-            <View style={styles.requestTopRow}>
-              <View style={styles.requestTextWrap}>
-                <Text style={styles.requestTitle}>{request.title}</Text>
-                <Text style={styles.requestArtist}>{request.artist}</Text>
+      {loading ? (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color="#FF00FF" />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.listContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF00FF" colors={['#FF00FF']} />}
+        >
+          {reservations.map((reservation) => (
+            <View key={reservation.id} style={styles.requestCard}>
+              <View style={styles.requestTopRow}>
+                <View style={styles.requestTextWrap}>
+                  <Text style={styles.requestTitle}>{reservation.title}</Text>
+                  <Text style={styles.requestArtist}>{reservation.artist}</Text>
+                </View>
+                <View style={isMatched(reservation) ? styles.matchedBadge : styles.pendingBadge}>
+                  <Text style={isMatched(reservation) ? styles.matchedText : styles.pendingText}>
+                    {isMatched(reservation) ? '매치됨' : '대기중'}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.pendingBadge}>
-                <Text style={styles.pendingText}>대기중</Text>
-              </View>
-            </View>
 
-            <View style={styles.actionRow}>
-              <Pressable onPress={() => openEditSheet(request)} style={styles.ghostButton}>
-                <Text style={styles.ghostButtonText}>수정</Text>
-              </Pressable>
-              <Pressable onPress={() => confirmDelete(request)} style={styles.ghostButton}>
-                <Text style={styles.ghostButtonText}>삭제</Text>
-              </Pressable>
+              {!isMatched(reservation) ? (
+                <View style={styles.actionRow}>
+                  <Pressable onPress={() => openEditSheet(reservation)} style={styles.ghostButton}>
+                    <Text style={styles.ghostButtonText}>수정</Text>
+                  </Pressable>
+                  <Pressable onPress={() => confirmDelete(reservation)} style={styles.ghostButton}>
+                    <Text style={styles.ghostButtonText}>삭제</Text>
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
-          </View>
-        ))}
+          ))}
 
-        {!reservationRequests.length ? (
-          <View style={styles.emptyWrap}>
-            <Text style={styles.emptyTitle}>예약 요청이 없습니다.</Text>
-            <Text style={styles.emptyDesc}>우측 상단 `추가` 버튼으로 아티스트/제목을 등록하세요.</Text>
-          </View>
-        ) : null}
-      </ScrollView>
+          {!reservations.length ? (
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyTitle}>예약 요청이 없습니다.</Text>
+              <Text style={styles.emptyDesc}>우측 상단 추가 버튼으로 아티스트/제목을 등록하세요.</Text>
+            </View>
+          ) : null}
+        </ScrollView>
+      )}
 
       <Modal transparent visible={isSheetVisible} animationType="none" onRequestClose={closeSheet}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalRoot}>
@@ -212,6 +297,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  loadingWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   listContent: {
     paddingBottom: 26,
     gap: 10,
@@ -254,6 +344,19 @@ const styles = StyleSheet.create({
   },
   pendingText: {
     color: '#CE007D',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  matchedBadge: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#B2DFDB',
+    backgroundColor: '#E0F2F1',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  matchedText: {
+    color: '#00796B',
     fontSize: 12,
     fontWeight: '800',
   },
