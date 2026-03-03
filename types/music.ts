@@ -11,3 +11,10 @@ export type Playlist = {
   name: string;
   songs: TjSong[];
 };
+
+export type ReservationRequest = {
+  id: string;
+  artist: string;
+  title: string;
+  createdAt: string;
+};

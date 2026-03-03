@@ -194,11 +194,27 @@ export async function searchTjSongs(query: string): Promise<TjSong[]> {
     if (normalized.length) {
       return normalized;
     }
+
+    const single = normalizeSong(payload);
+    if (single) {
+      return [single];
+    }
   } catch {
     // Keep fallback behavior so UI remains usable when API is unreachable.
   }
 
-  return fallbackSongs.filter((song) => song.title.includes(keyword) || song.artist.includes(keyword));
+  const normalizedKeyword = normalizeNo(keyword);
+  return fallbackSongs.filter((song) => {
+    if (song.title.includes(keyword) || song.artist.includes(keyword)) {
+      return true;
+    }
+
+    if (!normalizedKeyword) {
+      return false;
+    }
+
+    return normalizeNo(song.tjNumber) === normalizedKeyword;
+  });
 }
 
 export async function getSongByTjNumber(tjNumber: string): Promise<TjSong | null> {

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppScreen } from '@/components/music/app-screen';
 import { useMusic } from '@/contexts/music-context';
@@ -13,6 +13,25 @@ export default function FavoriteDetailsScreen() {
 
   const group = useMemo(() => playlists.find((item) => item.id === groupId), [groupId, playlists]);
   const songs = group?.songs ?? [];
+
+  const openYoutube = async (youtubeUrl?: string) => {
+    if (!youtubeUrl) {
+      Alert.alert('유튜브 링크 없음', '해당 곡의 유튜브 링크가 없습니다.');
+      return;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(youtubeUrl);
+      if (!supported) {
+        Alert.alert('링크 오류', '유튜브 링크를 열 수 없습니다.');
+        return;
+      }
+
+      await Linking.openURL(youtubeUrl);
+    } catch {
+      Alert.alert('링크 오류', '유튜브 링크를 여는 중 문제가 발생했습니다.');
+    }
+  };
 
   return (
     <AppScreen>
@@ -31,9 +50,14 @@ export default function FavoriteDetailsScreen() {
               <Text style={styles.songArtist}>{song.artist}</Text>
               <Text style={styles.songNo}>TJ {song.tjNumber}</Text>
             </View>
-            <Pressable onPress={() => removeSongFromPlaylist(groupId, song.id)} style={styles.deleteButton}>
-              <Text style={styles.deleteText}>삭제</Text>
-            </Pressable>
+            <View style={styles.actionWrap}>
+              <Pressable onPress={() => openYoutube(song.youtubeUrl)} style={[styles.actionButton, styles.youtubeButton]}>
+                <Text style={[styles.actionText, styles.youtubeText]}>유튜브 연결</Text>
+              </Pressable>
+              <Pressable onPress={() => removeSongFromPlaylist(groupId, song.id)} style={styles.actionButton}>
+                <Text style={styles.actionText}>삭제</Text>
+              </Pressable>
+            </View>
           </View>
         ))}
 
@@ -102,7 +126,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  deleteButton: {
+  actionWrap: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  actionButton: {
     minWidth: 58,
     minHeight: 34,
     borderRadius: 10,
@@ -112,10 +141,17 @@ const styles = StyleSheet.create({
     borderColor: '#D1D1D1',
     backgroundColor: '#FFFFFF',
   },
-  deleteText: {
+  actionText: {
     color: '#111111',
     fontSize: 13,
     fontWeight: '700',
+  },
+  youtubeButton: {
+    borderColor: '#FF4FB8',
+    minWidth: 90,
+  },
+  youtubeText: {
+    color: '#FF1A9B',
   },
   emptyText: {
     marginTop: 16,

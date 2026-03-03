@@ -1,26 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppScreen } from '@/components/music/app-screen';
 import { PinkButton } from '@/components/music/pink-button';
 import { SearchInput } from '@/components/music/search-input';
 import { useMusic } from '@/contexts/music-context';
-import { getSongByTjNumber, searchTjSongs } from '@/services/tj-api';
+import { searchTjSongs } from '@/services/tj-api';
 import type { TjSong } from '@/types/music';
-
-function normalizeNo(value: string): string {
-  return value.replace(/[^0-9]/g, '');
-}
 
 function SongResultRow({
   song,
-  onReserve,
   onAddToPlaylist,
   onOpenYoutube,
 }: {
   song: TjSong;
-  onReserve: (song: TjSong) => void;
   onAddToPlaylist: (song: TjSong) => void;
   onOpenYoutube: (song: TjSong) => void;
 }) {
@@ -39,9 +33,6 @@ function SongResultRow({
         <Pressable onPress={() => onOpenYoutube(song)} style={styles.ghostButton}>
           <Text style={styles.ghostButtonText}>유튜브</Text>
         </Pressable>
-        <Pressable onPress={() => onReserve(song)} style={styles.ghostButton}>
-          <Text style={styles.ghostButtonText}>예약</Text>
-        </Pressable>
         <PinkButton label="플리추가" onPress={() => onAddToPlaylist(song)} />
       </View>
     </View>
@@ -49,15 +40,12 @@ function SongResultRow({
 }
 
 export default function SearchScreen() {
-  const { playlists, reservationSongs, addSongToPlaylist, addSongToReservation } = useMusic();
+  const { playlists, addSongToPlaylist } = useMusic();
 
-  const [keyword, setKeyword] = useState('');
-  const [tjNumber, setTjNumber] = useState('');
+  const [query, setQuery] = useState('');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(playlists[0]?.id ?? '');
   const [results, setResults] = useState<TjSong[]>([]);
-  const [singleSong, setSingleSong] = useState<TjSong | null>(null);
   const [loading, setLoading] = useState(false);
-  const [numberLoading, setNumberLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   const playlistOptions = useMemo(
@@ -75,11 +63,6 @@ export default function SearchScreen() {
       setSelectedPlaylistId(playlistOptions[0].id);
     }
   }, [playlistOptions, selectedPlaylistId]);
-
-  const reserveSong = (song: TjSong) => {
-    addSongToReservation(song);
-    Alert.alert('예약리스트에 추가됨', `${song.title} (${song.tjNumber})`);
-  };
 
   const addSong = (song: TjSong) => {
     addSongToPlaylist(song, selectedPlaylistId || playlists[0]?.id);
@@ -101,11 +84,11 @@ export default function SearchScreen() {
     Linking.openURL(song.youtubeUrl);
   };
 
-  const searchByKeyword = async () => {
-    const normalized = keyword.trim();
+  const searchSongs = async () => {
+    const normalized = query.trim();
     if (!normalized) {
       setResults([]);
-      setMessage('검색어를 입력해주세요.');
+      setMessage('TJ 번호, 가수, 곡명을 입력해주세요.');
       return;
     }
 
@@ -125,81 +108,18 @@ export default function SearchScreen() {
     }
   };
 
-  const searchByNumber = async () => {
-    const normalized = tjNumber.trim();
-    if (!normalized) {
-      setSingleSong(null);
-      setMessage('TJ 번호를 입력해주세요.');
-      return;
-    }
-    const normalizedDigits = normalizeNo(normalized);
-
-    const localPool: TjSong[] = [
-      ...results,
-      ...reservationSongs,
-      ...playlists.flatMap((playlist) => playlist.songs),
-      ...(singleSong ? [singleSong] : []),
-    ];
-    const localMatch = localPool.find((song) => normalizeNo(song.tjNumber) === normalizedDigits);
-    if (localMatch) {
-      setSingleSong(localMatch);
-      setMessage('');
-      return;
-    }
-
-    setNumberLoading(true);
-    setMessage('');
-
-    try {
-      let song = await getSongByTjNumber(normalized);
-
-      if (!song && keyword.trim()) {
-        const keywordSongs = await searchTjSongs(keyword.trim());
-        song = keywordSongs.find((item) => normalizeNo(item.tjNumber) === normalizedDigits) ?? null;
-      }
-
-      setSingleSong(song);
-      if (!song) {
-        setMessage('해당 TJ 번호의 곡을 찾지 못했습니다. 먼저 곡검색 후 번호조회 해보세요.');
-      }
-    } catch {
-      setMessage('TJ 번호 조회 중 오류가 발생했습니다.');
-    } finally {
-      setNumberLoading(false);
-    }
-  };
-
   return (
     <AppScreen>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>TJ 곡검색 / 번호조회</Text>
+        <Text style={styles.title}>TJ 곡검색</Text>
 
-        <SearchInput value={keyword} onChangeText={setKeyword} buttonLabel="키워드" />
+        <SearchInput value={query} onChangeText={setQuery} />
         <View style={styles.searchActionWrap}>
           <PinkButton
             label={loading ? '검색중...' : '곡검색'}
             icon={<MaterialCommunityIcons name="magnify" size={16} color="#FFFFFF" />}
-            onPress={searchByKeyword}
+            onPress={searchSongs}
           />
-        </View>
-
-        <View style={styles.numberBox}>
-          <Text style={styles.sectionTitle}>TJ 번호로 조회</Text>
-          <View style={styles.numberInputRow}>
-            <TextInput
-              value={tjNumber}
-              onChangeText={setTjNumber}
-              keyboardType="number-pad"
-              placeholder="예: 98662"
-              placeholderTextColor="#8A8A8A"
-              style={styles.numberInput}
-            />
-            <PinkButton label={numberLoading ? '조회중...' : '조회'} onPress={searchByNumber} />
-          </View>
-
-          {singleSong ? (
-            <SongResultRow song={singleSong} onReserve={reserveSong} onAddToPlaylist={addSong} onOpenYoutube={openYoutube} />
-          ) : null}
         </View>
 
         <Text style={styles.sectionTitle}>추가할 플레이리스트 선택</Text>
@@ -219,7 +139,7 @@ export default function SearchScreen() {
 
         <Text style={styles.sectionTitle}>검색 결과</Text>
         {results.map((song) => (
-          <SongResultRow key={song.id} song={song} onReserve={reserveSong} onAddToPlaylist={addSong} onOpenYoutube={openYoutube} />
+          <SongResultRow key={song.id} song={song} onAddToPlaylist={addSong} onOpenYoutube={openYoutube} />
         ))}
 
         {!results.length && !loading ? <Text style={styles.emptyText}>{message || '검색 결과가 여기에 표시됩니다.'}</Text> : null}
@@ -244,35 +164,10 @@ const styles = StyleSheet.create({
   searchActionWrap: {
     alignSelf: 'flex-end',
   },
-  numberBox: {
-    marginTop: 4,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#ECECEC',
-    backgroundColor: '#FAFAFA',
-    gap: 10,
-  },
   sectionTitle: {
     color: '#111111',
     fontSize: 16,
     fontWeight: '800',
-  },
-  numberInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  numberInput: {
-    flex: 1,
-    minHeight: 42,
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    fontSize: 15,
-    color: '#111111',
-    backgroundColor: '#FFFFFF',
   },
   playlistRow: {
     gap: 8,

@@ -1,337 +1,369 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Animated, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Animated,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import { AppScreen } from '@/components/music/app-screen';
 import { PinkButton } from '@/components/music/pink-button';
 import { useMusic } from '@/contexts/music-context';
-import type { TjSong } from '@/types/music';
+import type { ReservationRequest } from '@/types/music';
 
-const DRAG_ROW_STEP = 136;
+const SHEET_HEIGHT = 320;
 
-type ReservationRowProps = {
-  song: TjSong;
-  index: number;
-  totalCount: number;
-  onDrop: (fromIndex: number, toIndex: number) => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onRemove: () => void;
-  onAddToPlaylist: () => void;
-};
-
-function ReservationRow({
-  song,
-  index,
-  totalCount,
-  onDrop,
-  onMoveUp,
-  onMoveDown,
-  onRemove,
-  onAddToPlaylist,
-}: ReservationRowProps) {
-  const [dragging, setDragging] = useState(false);
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 3,
-      onPanResponderGrant: () => {
-        setDragging(true);
-      },
-      onPanResponderMove: Animated.event([null, { dy: translateY }], {
-        useNativeDriver: false,
-      }),
-      onPanResponderRelease: (_, gestureState) => {
-        const moveSteps = Math.round(gestureState.dy / DRAG_ROW_STEP);
-        const target = Math.max(0, Math.min(totalCount - 1, index + moveSteps));
-
-        translateY.setValue(0);
-        setDragging(false);
-        onDrop(index, target);
-      },
-      onPanResponderTerminate: () => {
-        translateY.setValue(0);
-        setDragging(false);
-      },
-    })
-  ).current;
-
-  return (
-    <Animated.View
-      style={[
-        styles.songRow,
-        dragging && styles.draggingRow,
-        dragging && {
-          transform: [{ translateY }],
-        },
-      ]}>
-      <View style={styles.songInfo}>
-        <Text style={styles.orderText}>{index + 1}</Text>
-        <View style={styles.textWrap}>
-          <Text style={styles.songTitle}>{song.title}</Text>
-          <Text style={styles.songArtist}>{song.artist}</Text>
-          <Text style={styles.songNo}>TJ {song.tjNumber}</Text>
-        </View>
-        <View style={styles.dragHandle} {...panResponder.panHandlers}>
-          <Text style={styles.dragHandleText}>드래그</Text>
-          <Text style={styles.dragHandleIcon}>≡</Text>
-        </View>
-      </View>
-
-      <View style={styles.rowActions}>
-        <Pressable onPress={onMoveUp} disabled={index === 0} style={[styles.ghostButton, index === 0 && styles.disabledButton]}>
-          <Text style={styles.ghostButtonText}>위로</Text>
-        </Pressable>
-        <Pressable
-          onPress={onMoveDown}
-          disabled={index === totalCount - 1}
-          style={[styles.ghostButton, index === totalCount - 1 && styles.disabledButton]}>
-          <Text style={styles.ghostButtonText}>아래로</Text>
-        </Pressable>
-        <Pressable onPress={onRemove} style={styles.ghostButton}>
-          <Text style={styles.ghostButtonText}>삭제</Text>
-        </Pressable>
-        <PinkButton label="플리추가" onPress={onAddToPlaylist} />
-      </View>
-    </Animated.View>
-  );
-}
+type FormMode = 'create' | 'edit';
 
 export default function ReservationScreen() {
-  const { reservationSongs, playlists, removeSongFromReservation, clearReservations, addSongToPlaylist, moveReservationSong, reorderReservationSong } =
-    useMusic();
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState(playlists[0]?.id ?? '');
+  const { reservationRequests, addReservationRequest, updateReservationRequest, removeReservationRequest } = useMusic();
 
-  const selectedPlaylist = useMemo(
-    () => playlists.find((playlist) => playlist.id === selectedPlaylistId) ?? playlists[0],
-    [playlists, selectedPlaylistId]
+  const [isSheetVisible, setIsSheetVisible] = useState(false);
+  const [mode, setMode] = useState<FormMode>('create');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [artist, setArtist] = useState('');
+  const [title, setTitle] = useState('');
+
+  const slideY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+
+  const editingTarget = useMemo(
+    () => reservationRequests.find((item) => item.id === editingId) ?? null,
+    [editingId, reservationRequests]
   );
 
   useEffect(() => {
-    if (!playlists.length) {
-      setSelectedPlaylistId('');
+    if (isSheetVisible) {
+      Animated.timing(slideY, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
       return;
     }
 
-    if (!playlists.some((playlist) => playlist.id === selectedPlaylistId)) {
-      setSelectedPlaylistId(playlists[0].id);
+    slideY.setValue(SHEET_HEIGHT);
+  }, [isSheetVisible, slideY]);
+
+  const closeSheet = () => {
+    Animated.timing(slideY, {
+      toValue: SHEET_HEIGHT,
+      duration: 180,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (!finished) return;
+      setIsSheetVisible(false);
+      setEditingId(null);
+      setArtist('');
+      setTitle('');
+      setMode('create');
+    });
+  };
+
+  const openCreateSheet = () => {
+    setMode('create');
+    setEditingId(null);
+    setArtist('');
+    setTitle('');
+    setIsSheetVisible(true);
+  };
+
+  const openEditSheet = (request: ReservationRequest) => {
+    setMode('edit');
+    setEditingId(request.id);
+    setArtist(request.artist);
+    setTitle(request.title);
+    setIsSheetVisible(true);
+  };
+
+  const submitForm = () => {
+    const nextArtist = artist.trim();
+    const nextTitle = title.trim();
+
+    if (!nextArtist || !nextTitle) {
+      Alert.alert('입력 필요', '아티스트와 제목을 모두 입력해주세요.');
+      return;
     }
-  }, [playlists, selectedPlaylistId]);
 
-  const saveAllToSelectedPlaylist = () => {
-    const targetPlaylist = selectedPlaylist;
-    if (!targetPlaylist) return;
+    if (mode === 'edit' && editingTarget) {
+      updateReservationRequest(editingTarget.id, { artist: nextArtist, title: nextTitle });
+      closeSheet();
+      return;
+    }
 
-    reservationSongs.forEach((song) => addSongToPlaylist(song, targetPlaylist.id));
-    Alert.alert('저장 완료', `예약곡을 "${targetPlaylist.name}"에 추가했습니다.`);
+    addReservationRequest({ artist: nextArtist, title: nextTitle });
+    closeSheet();
+  };
+
+  const confirmDelete = (request: ReservationRequest) => {
+    Alert.alert('삭제 확인', `"${request.title}" 예약 요청을 삭제할까요?`, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: () => removeReservationRequest(request.id),
+      },
+    ]);
   };
 
   return (
     <AppScreen>
-      <View style={styles.titleRow}>
-        <Text style={styles.title}>선곡 예약리스트</Text>
-        <Text style={styles.count}>{reservationSongs.length}곡</Text>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.title}>선곡예약 리스트</Text>
+          <Text style={styles.subtitle}>TJ 미등록 곡을 등록 알림 대상으로 관리합니다.</Text>
+        </View>
+        <PinkButton label="추가" onPress={openCreateSheet} />
       </View>
-
-      <View style={styles.actionTopRow}>
-        <PinkButton label="전체 플리에 저장" onPress={saveAllToSelectedPlaylist} />
-        <Pressable onPress={clearReservations} style={styles.ghostButton}>
-          <Text style={styles.ghostButtonText}>전체 삭제</Text>
-        </Pressable>
-      </View>
-
-      <Text style={styles.sectionTitle}>저장 대상 플레이리스트</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.playlistRow}>
-        {playlists.map((playlist) => {
-          const active = selectedPlaylist?.id === playlist.id;
-          return (
-            <Pressable
-              key={playlist.id}
-              onPress={() => setSelectedPlaylistId(playlist.id)}
-              style={[styles.playlistChip, active && styles.playlistChipActive]}>
-              <Text style={[styles.playlistChipText, active && styles.playlistChipTextActive]}>{playlist.name}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
 
       <ScrollView contentContainerStyle={styles.listContent}>
-        {reservationSongs.map((song, index) => (
-          <ReservationRow
-            key={`${song.id}-${index}`}
-            song={song}
-            index={index}
-            totalCount={reservationSongs.length}
-            onDrop={reorderReservationSong}
-            onMoveUp={() => moveReservationSong(song.id, 'up')}
-            onMoveDown={() => moveReservationSong(song.id, 'down')}
-            onRemove={() => removeSongFromReservation(song.id)}
-            onAddToPlaylist={() => addSongToPlaylist(song, selectedPlaylist?.id)}
-          />
+        {reservationRequests.map((request) => (
+          <View key={request.id} style={styles.requestCard}>
+            <View style={styles.requestTopRow}>
+              <View style={styles.requestTextWrap}>
+                <Text style={styles.requestTitle}>{request.title}</Text>
+                <Text style={styles.requestArtist}>{request.artist}</Text>
+              </View>
+              <View style={styles.pendingBadge}>
+                <Text style={styles.pendingText}>대기중</Text>
+              </View>
+            </View>
+
+            <View style={styles.actionRow}>
+              <Pressable onPress={() => openEditSheet(request)} style={styles.ghostButton}>
+                <Text style={styles.ghostButtonText}>수정</Text>
+              </Pressable>
+              <Pressable onPress={() => confirmDelete(request)} style={styles.ghostButton}>
+                <Text style={styles.ghostButtonText}>삭제</Text>
+              </Pressable>
+            </View>
+          </View>
         ))}
 
-        {!reservationSongs.length ? <Text style={styles.emptyText}>검색 탭에서 예약 버튼을 누르면 여기 쌓입니다.</Text> : null}
+        {!reservationRequests.length ? (
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyTitle}>예약 요청이 없습니다.</Text>
+            <Text style={styles.emptyDesc}>우측 상단 `추가` 버튼으로 아티스트/제목을 등록하세요.</Text>
+          </View>
+        ) : null}
       </ScrollView>
+
+      <Modal transparent visible={isSheetVisible} animationType="none" onRequestClose={closeSheet}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalRoot}>
+          <Pressable style={styles.dim} onPress={closeSheet} />
+          <Animated.View style={[styles.sheet, { transform: [{ translateY: slideY }] }]}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>{mode === 'edit' ? '예약 요청 수정' : '예약 요청 추가'}</Text>
+
+            <Text style={styles.fieldLabel}>아티스트</Text>
+            <TextInput
+              value={artist}
+              onChangeText={setArtist}
+              placeholder="아티스트 입력"
+              placeholderTextColor="#8A8A8A"
+              style={styles.input}
+            />
+
+            <Text style={styles.fieldLabel}>제목</Text>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="곡 제목 입력"
+              placeholderTextColor="#8A8A8A"
+              style={styles.input}
+            />
+
+            <View style={styles.sheetActionRow}>
+              <Pressable onPress={closeSheet} style={styles.cancelButton}>
+                <Text style={styles.cancelText}>취소</Text>
+              </Pressable>
+              <PinkButton label={mode === 'edit' ? '수정 완료' : '추가'} onPress={submitForm} />
+            </View>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </Modal>
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  titleRow: {
+  headerRow: {
     marginTop: 8,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    color: '#111111',
-    fontSize: 34,
-    fontWeight: '900',
-  },
-  count: {
-    color: '#666666',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  actionTopRow: {
     marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8,
+    alignItems: 'flex-start',
+    gap: 12,
   },
-  sectionTitle: {
+  title: {
     color: '#111111',
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '900',
   },
-  playlistRow: {
-    gap: 8,
-    paddingTop: 6,
-    paddingBottom: 10,
-    paddingRight: 12,
-  },
-  playlistChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: '#CFCFCF',
-    backgroundColor: '#FFFFFF',
-  },
-  playlistChipActive: {
-    borderColor: '#FF00FF',
-    backgroundColor: '#FFF2FF',
-  },
-  playlistChipText: {
-    color: '#444444',
+  subtitle: {
+    marginTop: 4,
+    color: '#666666',
     fontSize: 13,
-    fontWeight: '700',
-  },
-  playlistChipTextActive: {
-    color: '#C900C9',
+    fontWeight: '600',
   },
   listContent: {
-    paddingBottom: 22,
+    paddingBottom: 26,
     gap: 10,
   },
-  songRow: {
-    borderRadius: 12,
+  requestCard: {
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#EAEAEA',
+    borderColor: '#EBEBEB',
     backgroundColor: '#FFFFFF',
-    padding: 10,
+    padding: 12,
+    gap: 10,
+  },
+  requestTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     gap: 8,
   },
-  draggingRow: {
-    zIndex: 20,
-    shadowColor: '#000000',
-    shadowOpacity: 0.16,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  songInfo: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'flex-start',
-  },
-  orderText: {
-    minWidth: 22,
-    color: '#FF00FF',
-    fontSize: 18,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-  textWrap: {
+  requestTextWrap: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
-  songTitle: {
+  requestTitle: {
     color: '#111111',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
   },
-  songArtist: {
-    color: '#333333',
+  requestArtist: {
+    color: '#444444',
     fontSize: 14,
+    fontWeight: '600',
   },
-  songNo: {
-    color: '#666666',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  dragHandle: {
-    minWidth: 58,
-    minHeight: 44,
-    borderRadius: 10,
+  pendingBadge: {
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#DBDBDB',
-    backgroundColor: '#FAFAFA',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
+    borderColor: '#FFC3E8',
+    backgroundColor: '#FFF4FB',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
-  dragHandleText: {
-    color: '#555555',
-    fontSize: 10,
-    fontWeight: '700',
+  pendingText: {
+    color: '#CE007D',
+    fontSize: 12,
+    fontWeight: '800',
   },
-  dragHandleIcon: {
-    color: '#222222',
-    fontSize: 17,
-    fontWeight: '900',
-    marginTop: -2,
-  },
-  rowActions: {
+  actionRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 8,
   },
   ghostButton: {
-    minHeight: 36,
-    minWidth: 66,
+    minWidth: 62,
+    minHeight: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#D2D2D2',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#D5D5D5',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF',
   },
   ghostButtonText: {
-    color: '#111111',
+    color: '#222222',
+    fontSize: 13,
     fontWeight: '700',
+  },
+  emptyWrap: {
+    marginTop: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    backgroundColor: '#FAFAFA',
+    padding: 14,
+    gap: 4,
+  },
+  emptyTitle: {
+    color: '#222222',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  emptyDesc: {
+    color: '#666666',
     fontSize: 13,
   },
-  disabledButton: {
-    opacity: 0.45,
+  modalRoot: {
+    flex: 1,
+    justifyContent: 'flex-end',
   },
-  emptyText: {
-    marginTop: 10,
-    color: '#666666',
+  dim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+  },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 20,
+    minHeight: SHEET_HEIGHT,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 42,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: '#D6D6D6',
+    marginBottom: 12,
+  },
+  sheetTitle: {
+    color: '#111111',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 12,
+  },
+  fieldLabel: {
+    color: '#111111',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  input: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: '#DADADA',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    color: '#111111',
+    fontSize: 15,
+    backgroundColor: '#FFFFFF',
+    marginBottom: 10,
+  },
+  sheetActionRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+  },
+  cancelButton: {
+    minHeight: 38,
+    minWidth: 72,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D3D3D3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  cancelText: {
+    color: '#333333',
     fontSize: 14,
+    fontWeight: '700',
   },
 });

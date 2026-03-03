@@ -1,18 +1,17 @@
 import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
 
-import type { Playlist, TjSong } from '@/types/music';
+import type { Playlist, ReservationRequest, TjSong } from '@/types/music';
 
 type MusicContextValue = {
   playlists: Playlist[];
-  reservationSongs: TjSong[];
+  reservationRequests: ReservationRequest[];
   createPlaylist: (name: string) => void;
   addSongToPlaylist: (song: TjSong, playlistId?: string) => void;
   removeSongFromPlaylist: (playlistId: string, songId: string) => void;
   addSongToReservation: (song: TjSong) => void;
-  removeSongFromReservation: (songId: string) => void;
-  moveReservationSong: (songId: string, direction: 'up' | 'down') => void;
-  reorderReservationSong: (fromIndex: number, toIndex: number) => void;
-  clearReservations: () => void;
+  addReservationRequest: (payload: { artist: string; title: string }) => void;
+  updateReservationRequest: (requestId: string, payload: { artist: string; title: string }) => void;
+  removeReservationRequest: (requestId: string) => void;
 };
 
 const MusicContext = createContext<MusicContextValue | null>(null);
@@ -27,7 +26,7 @@ const initialPlaylists: Playlist[] = [
 
 export function MusicProvider({ children }: PropsWithChildren) {
   const [playlists, setPlaylists] = useState<Playlist[]>(initialPlaylists);
-  const [reservationSongs, setReservationSongs] = useState<TjSong[]>([]);
+  const [reservationRequests, setReservationRequests] = useState<ReservationRequest[]>([]);
 
   const createPlaylist = (name: string) => {
     const trimmed = name.trim();
@@ -80,66 +79,81 @@ export function MusicProvider({ children }: PropsWithChildren) {
   };
 
   const addSongToReservation = (song: TjSong) => {
-    setReservationSongs((prev) => {
-      if (prev.some((item) => item.tjNumber === song.tjNumber)) {
+    setReservationRequests((prev) => {
+      const artist = song.artist.trim();
+      const title = song.title.trim();
+      if (!artist || !title) {
         return prev;
       }
 
-      return [...prev, song];
-    });
-  };
-
-  const removeSongFromReservation = (songId: string) => {
-    setReservationSongs((prev) => prev.filter((song) => song.id !== songId));
-  };
-
-  const moveReservationSong = (songId: string, direction: 'up' | 'down') => {
-    setReservationSongs((prev) => {
-      const index = prev.findIndex((song) => song.id === songId);
-      if (index < 0) return prev;
-
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= prev.length) {
+      if (prev.some((item) => item.artist.toLowerCase() === artist.toLowerCase() && item.title.toLowerCase() === title.toLowerCase())) {
         return prev;
       }
 
-      const next = [...prev];
-      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
-      return next;
+      return [
+        {
+          id: `reservation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          artist,
+          title,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ];
     });
   };
 
-  const reorderReservationSong = (fromIndex: number, toIndex: number) => {
-    setReservationSongs((prev) => {
-      if (fromIndex === toIndex) return prev;
-      if (fromIndex < 0 || fromIndex >= prev.length) return prev;
-      if (toIndex < 0 || toIndex >= prev.length) return prev;
+  const addReservationRequest = (payload: { artist: string; title: string }) => {
+    const artist = payload.artist.trim();
+    const title = payload.title.trim();
+    if (!artist || !title) return;
 
-      const next = [...prev];
-      const [item] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, item);
-      return next;
+    setReservationRequests((prev) => {
+      if (prev.some((item) => item.artist.toLowerCase() === artist.toLowerCase() && item.title.toLowerCase() === title.toLowerCase())) {
+        return prev;
+      }
+
+      return [
+        {
+          id: `reservation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          artist,
+          title,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ];
     });
   };
 
-  const clearReservations = () => {
-    setReservationSongs([]);
+  const updateReservationRequest = (requestId: string, payload: { artist: string; title: string }) => {
+    const artist = payload.artist.trim();
+    const title = payload.title.trim();
+    if (!artist || !title) return;
+
+    setReservationRequests((prev) =>
+      prev.map((item) => {
+        if (item.id !== requestId) return item;
+        return { ...item, artist, title };
+      })
+    );
+  };
+
+  const removeReservationRequest = (requestId: string) => {
+    setReservationRequests((prev) => prev.filter((item) => item.id !== requestId));
   };
 
   const value = useMemo<MusicContextValue>(
     () => ({
       playlists,
-      reservationSongs,
+      reservationRequests,
       createPlaylist,
       addSongToPlaylist,
       removeSongFromPlaylist,
       addSongToReservation,
-      removeSongFromReservation,
-      moveReservationSong,
-      reorderReservationSong,
-      clearReservations,
+      addReservationRequest,
+      updateReservationRequest,
+      removeReservationRequest,
     }),
-    [playlists, reservationSongs]
+    [playlists, reservationRequests]
   );
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;

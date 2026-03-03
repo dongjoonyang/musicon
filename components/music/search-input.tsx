@@ -7,13 +7,13 @@ type SearchInputProps = {
   buttonLabel?: string;
 };
 
-export function SearchInput({ value, onChangeText, buttonLabel = '검색버튼' }: SearchInputProps) {
+export function SearchInput({ value, onChangeText, buttonLabel = '검색' }: SearchInputProps) {
   return (
     <View style={styles.wrap}>
       <TextInput
         value={value}
         onChangeText={onChangeText}
-        placeholder="가수 또는 곡명을 입력"
+        placeholder="TJ 번호, 가수 또는 곡명을 입력"
         placeholderTextColor="#8A8A8A"
         style={styles.input}
       />
