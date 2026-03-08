@@ -1,6 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { MusicTheme } from '@/constants/music-theme';
+
 type PlaylistItemProps = {
   title: string;
   songCount: number;
@@ -11,44 +13,65 @@ type PlaylistItemProps = {
 export function PlaylistItem({ title, songCount, active = false, onPress }: PlaylistItemProps) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <View style={styles.leading}>
-        <MaterialCommunityIcons name="playlist-music" size={22} color={active ? '#FF00FF' : '#333333'} />
-        <Text style={[styles.title, active && styles.activeTitle]}>{title}</Text>
+      <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
+        <MaterialCommunityIcons
+          name="playlist-music"
+          size={22}
+          color={active ? MusicTheme.colors.primary : MusicTheme.colors.textSecondary}
+        />
       </View>
-      <Text style={styles.count}>({songCount}곡)</Text>
+      <View style={styles.leading}>
+        <Text style={[styles.title, active && styles.activeTitle]} numberOfLines={1}>{title}</Text>
+        <Text style={styles.count}>{songCount}곡</Text>
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: '#D9D9D9',
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
+    paddingHorizontal: MusicTheme.spacing.md,
+    paddingVertical: MusicTheme.spacing.sm,
+    marginHorizontal: MusicTheme.spacing.lg,
+    marginBottom: MusicTheme.spacing.xs,
+    borderRadius: MusicTheme.radius.lg,
+    backgroundColor: MusicTheme.colors.surface,
+    gap: 14,
+    ...MusicTheme.shadow.card,
   },
   pressed: {
-    backgroundColor: '#F7F7F7',
+    opacity: 0.92,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: MusicTheme.radius.md,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: MusicTheme.colors.primaryLight,
   },
   leading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    flex: 1,
+    gap: 2,
   },
   title: {
-    color: '#111111',
-    fontWeight: '600',
+    color: MusicTheme.colors.text,
+    fontWeight: '700',
     fontSize: 16,
   },
   activeTitle: {
-    color: '#FF00FF',
+    color: MusicTheme.colors.primary,
   },
   count: {
-    color: '#111111',
-    fontWeight: '700',
-    fontSize: 15,
+    color: MusicTheme.colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

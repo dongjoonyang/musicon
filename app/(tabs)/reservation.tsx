@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 
+import { MusicTheme } from '@/constants/music-theme';
 import { AppScreen } from '@/components/music/app-screen';
 import { PinkButton } from '@/components/music/pink-button';
 import { usePushToken } from '@/contexts/push-token-context';
@@ -196,12 +197,20 @@ export default function ReservationScreen() {
 
       {loading ? (
         <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color="#FF00FF" />
+          <ActivityIndicator size="large" color={MusicTheme.colors.primary} />
         </View>
       ) : (
         <ScrollView
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF00FF" colors={['#FF00FF']} />}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={MusicTheme.colors.primary}
+              colors={[MusicTheme.colors.primary]}
+            />
+          }
         >
           {reservations.map((reservation) => (
             <View key={reservation.id} style={styles.requestCard}>
@@ -279,23 +288,24 @@ export default function ReservationScreen() {
 
 const styles = StyleSheet.create({
   headerRow: {
-    marginTop: 8,
-    marginBottom: 10,
+    marginTop: 4,
+    marginBottom: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: 12,
   },
   title: {
-    color: '#111111',
-    fontSize: 32,
-    fontWeight: '900',
+    color: MusicTheme.colors.text,
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   subtitle: {
     marginTop: 4,
-    color: '#666666',
+    color: MusicTheme.colors.textMuted,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   loadingWrap: {
     flex: 1,
@@ -303,16 +313,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    paddingBottom: 26,
-    gap: 10,
+    paddingBottom: 28,
+    gap: 12,
   },
   requestCard: {
-    borderRadius: 14,
+    borderRadius: MusicTheme.radius.lg,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
-    backgroundColor: '#FFFFFF',
-    padding: 12,
+    borderColor: MusicTheme.colors.borderLight,
+    backgroundColor: MusicTheme.colors.surface,
+    padding: MusicTheme.spacing.md,
     gap: 10,
+    ...MusicTheme.shadow.card,
   },
   requestTopRow: {
     flexDirection: 'row',
@@ -325,78 +336,78 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   requestTitle: {
-    color: '#111111',
+    color: MusicTheme.colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   requestArtist: {
-    color: '#444444',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
   pendingBadge: {
-    borderRadius: 999,
+    borderRadius: MusicTheme.radius.full,
     borderWidth: 1,
-    borderColor: '#FFC3E8',
-    backgroundColor: '#FFF4FB',
+    borderColor: MusicTheme.colors.warningBg,
+    backgroundColor: MusicTheme.colors.warningBg,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
   pendingText: {
-    color: '#CE007D',
+    color: MusicTheme.colors.warning,
     fontSize: 12,
     fontWeight: '800',
   },
   matchedBadge: {
-    borderRadius: 999,
+    borderRadius: MusicTheme.radius.full,
     borderWidth: 1,
-    borderColor: '#B2DFDB',
-    backgroundColor: '#E0F2F1',
+    borderColor: MusicTheme.colors.successBg,
+    backgroundColor: MusicTheme.colors.successBg,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
   matchedText: {
-    color: '#00796B',
+    color: MusicTheme.colors.success,
     fontSize: 12,
     fontWeight: '800',
   },
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
+    gap: 10,
   },
   ghostButton: {
-    minWidth: 62,
-    minHeight: 34,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D5D5D5',
+    minWidth: 64,
+    minHeight: 36,
+    borderRadius: MusicTheme.radius.md,
+    borderWidth: 1.5,
+    borderColor: MusicTheme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    backgroundColor: MusicTheme.colors.surface,
   },
   ghostButtonText: {
-    color: '#222222',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 13,
     fontWeight: '700',
   },
   emptyWrap: {
-    marginTop: 14,
-    borderRadius: 14,
+    marginTop: 16,
+    borderRadius: MusicTheme.radius.lg,
     borderWidth: 1,
-    borderColor: '#ECECEC',
-    backgroundColor: '#FAFAFA',
-    padding: 14,
-    gap: 4,
+    borderColor: MusicTheme.colors.borderLight,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
+    padding: MusicTheme.spacing.lg,
+    gap: 6,
   },
   emptyTitle: {
-    color: '#222222',
-    fontSize: 14,
-    fontWeight: '800',
+    color: MusicTheme.colors.text,
+    fontSize: 15,
+    fontWeight: '700',
   },
   emptyDesc: {
-    color: '#666666',
+    color: MusicTheme.colors.textMuted,
     fontSize: 13,
   },
   modalRoot: {
@@ -405,67 +416,68 @@ const styles = StyleSheet.create({
   },
   dim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 20,
+    borderTopLeftRadius: MusicTheme.radius.xl,
+    borderTopRightRadius: MusicTheme.radius.xl,
+    backgroundColor: MusicTheme.colors.surface,
+    paddingHorizontal: MusicTheme.spacing.lg,
+    paddingTop: 12,
+    paddingBottom: 24,
     minHeight: SHEET_HEIGHT,
   },
   sheetHandle: {
     alignSelf: 'center',
-    width: 42,
+    width: 40,
     height: 4,
-    borderRadius: 999,
-    backgroundColor: '#D6D6D6',
-    marginBottom: 12,
+    borderRadius: MusicTheme.radius.full,
+    backgroundColor: MusicTheme.colors.border,
+    marginBottom: 14,
   },
   sheetTitle: {
-    color: '#111111',
+    color: MusicTheme.colors.text,
     fontSize: 18,
     fontWeight: '800',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   fieldLabel: {
-    color: '#111111',
+    color: MusicTheme.colors.text,
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 6,
   },
   input: {
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    color: '#111111',
+    minHeight: 46,
+    borderWidth: 1.5,
+    borderColor: MusicTheme.colors.border,
+    borderRadius: MusicTheme.radius.md,
+    paddingHorizontal: 14,
+    color: MusicTheme.colors.text,
     fontSize: 15,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 10,
+    backgroundColor: MusicTheme.colors.surface,
+    marginBottom: 12,
   },
   sheetActionRow: {
-    marginTop: 6,
+    marginTop: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   cancelButton: {
-    minHeight: 38,
-    minWidth: 72,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
+    minHeight: 44,
+    minWidth: 76,
+    borderRadius: MusicTheme.radius.md,
+    borderWidth: 1.5,
+    borderColor: MusicTheme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    backgroundColor: MusicTheme.colors.surface,
   },
   cancelText: {
-    color: '#333333',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 14,
     fontWeight: '700',
   },

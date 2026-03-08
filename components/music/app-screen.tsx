@@ -1,6 +1,8 @@
 import type { PropsWithChildren } from 'react';
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 
+import { MusicTheme } from '@/constants/music-theme';
+
 type AppScreenProps = PropsWithChildren<{
   noPadding?: boolean;
 }>;
@@ -16,13 +18,13 @@ export function AppScreen({ children, noPadding = false }: AppScreenProps) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: MusicTheme.colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    backgroundColor: MusicTheme.colors.background,
+    paddingHorizontal: MusicTheme.spacing.lg,
+    paddingTop: MusicTheme.spacing.sm,
   },
   noPadding: {
     paddingHorizontal: 0,

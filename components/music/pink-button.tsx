@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { MusicTheme } from '@/constants/music-theme';
+
 type PinkButtonProps = {
   label: string;
   onPress?: () => void;
@@ -18,25 +20,26 @@ export function PinkButton({ label, onPress, icon }: PinkButtonProps) {
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 40,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: '#FF00FF',
+    minHeight: 44,
+    paddingHorizontal: 18,
+    borderRadius: MusicTheme.radius.md,
+    backgroundColor: MusicTheme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
+    ...MusicTheme.shadow.button,
   },
   pressed: {
-    opacity: 0.8,
+    opacity: 0.88,
   },
   iconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    color: '#FFFFFF',
+    color: MusicTheme.colors.white,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 15,
   },
 });

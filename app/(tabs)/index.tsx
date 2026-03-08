@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { MusicTheme } from '@/constants/music-theme';
 import { AppScreen } from '@/components/music/app-screen';
 import { PlaylistItem } from '@/components/music/playlist-item';
 import { PinkButton } from '@/components/music/pink-button';
@@ -24,28 +25,39 @@ export default function PlaylistScreen() {
     <AppScreen noPadding>
       <View style={styles.headerWrap}>
         <Text style={styles.brand}>Music On</Text>
+        <Text style={styles.subTitle}>TJ 플레이리스트</Text>
         <View style={styles.subHeader}>
-          <Text style={styles.subTitle}>TJ 플레이리스트</Text>
-          <Pressable onPress={() => setShowCreate((prev) => !prev)}>
-            <Text style={styles.addText}>+ 추가</Text>
+          <Pressable
+            onPress={() => setShowCreate((prev) => !prev)}
+            style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}
+          >
+            <Text style={styles.addText}>+ 플레이리스트 추가</Text>
           </Pressable>
         </View>
 
         {showCreate ? (
-          <View style={styles.createRow}>
+          <View style={styles.createCard}>
             <TextInput
               value={newName}
               onChangeText={setNewName}
               placeholder="플레이리스트 이름"
-              placeholderTextColor="#8A8A8A"
+              placeholderTextColor={MusicTheme.colors.textMuted}
               style={styles.createInput}
             />
-            <PinkButton label="생성" onPress={submitCreate} />
+            <View style={styles.createRow}>
+              <Pressable onPress={() => setShowCreate(false)} style={styles.cancelBtn}>
+                <Text style={styles.cancelText}>취소</Text>
+              </Pressable>
+              <PinkButton label="생성" onPress={submitCreate} />
+            </View>
           </View>
         ) : null}
       </View>
 
-      <ScrollView contentContainerStyle={styles.listContent}>
+      <ScrollView
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
         {playlists.map((group, index) => (
           <PlaylistItem
             key={group.id}
@@ -62,52 +74,80 @@ export default function PlaylistScreen() {
 
 const styles = StyleSheet.create({
   headerWrap: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 6,
-    gap: 8,
+    paddingHorizontal: MusicTheme.spacing.lg,
+    paddingTop: MusicTheme.spacing.md,
+    paddingBottom: MusicTheme.spacing.sm,
+    gap: 6,
   },
   brand: {
-    color: '#111111',
-    fontSize: 34,
-    fontWeight: '900',
-    marginBottom: 6,
-  },
-  subHeader: {
-    minHeight: 40,
-    borderBottomWidth: 1,
-    borderBottomColor: '#D9D9D9',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingRight: 2,
+    color: MusicTheme.colors.text,
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   subTitle: {
-    color: '#111111',
-    fontSize: 16,
-    fontWeight: '700',
+    color: MusicTheme.colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  subHeader: {
+    marginBottom: MusicTheme.spacing.sm,
+  },
+  addButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: MusicTheme.radius.md,
+    backgroundColor: MusicTheme.colors.primaryLight,
+    borderWidth: 1,
+    borderColor: MusicTheme.colors.border,
+  },
+  addButtonPressed: {
+    opacity: 0.9,
   },
   addText: {
-    color: '#111111',
-    fontSize: 15,
+    color: MusicTheme.colors.primary,
+    fontSize: 14,
     fontWeight: '700',
+  },
+  createCard: {
+    marginHorizontal: MusicTheme.spacing.lg,
+    marginBottom: MusicTheme.spacing.md,
+    padding: MusicTheme.spacing.md,
+    borderRadius: MusicTheme.radius.lg,
+    backgroundColor: MusicTheme.colors.surface,
+    gap: 12,
+    ...MusicTheme.shadow.card,
   },
   createRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
     alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   createInput: {
-    flex: 1,
-    minHeight: 40,
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    color: '#111111',
-    backgroundColor: '#FFFFFF',
+    minHeight: 44,
+    borderWidth: 1.5,
+    borderColor: MusicTheme.colors.border,
+    borderRadius: MusicTheme.radius.md,
+    paddingHorizontal: 14,
+    color: MusicTheme.colors.text,
+    fontSize: 15,
+    backgroundColor: MusicTheme.colors.surface,
+  },
+  cancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  cancelText: {
+    color: MusicTheme.colors.textMuted,
+    fontSize: 14,
+    fontWeight: '600',
   },
   listContent: {
-    paddingBottom: 30,
+    paddingTop: 4,
+    paddingBottom: 32,
+    paddingHorizontal: 0,
   },
 });

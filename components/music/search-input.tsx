@@ -1,5 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
+
+import { MusicTheme } from '@/constants/music-theme';
 
 type SearchInputProps = {
   value: string;
@@ -7,42 +9,35 @@ type SearchInputProps = {
   buttonLabel?: string;
 };
 
-export function SearchInput({ value, onChangeText, buttonLabel = '검색' }: SearchInputProps) {
+export function SearchInput({ value, onChangeText }: SearchInputProps) {
   return (
     <View style={styles.wrap}>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder="TJ 번호, 가수 또는 곡명을 입력"
-        placeholderTextColor="#8A8A8A"
+        placeholderTextColor={MusicTheme.colors.textMuted}
         style={styles.input}
       />
-      <Text style={styles.buttonText}>{buttonLabel}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    minHeight: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#DCDCDC',
-    paddingHorizontal: 14,
+    minHeight: 50,
+    borderRadius: MusicTheme.radius.full,
+    borderWidth: 1.5,
+    borderColor: MusicTheme.colors.border,
+    backgroundColor: MusicTheme.colors.surface,
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#111111',
-    paddingVertical: 8,
-  },
-  buttonText: {
-    color: '#FF00FF',
-    fontWeight: '700',
-    fontSize: 14,
+    color: MusicTheme.colors.text,
+    paddingVertical: 12,
   },
 });

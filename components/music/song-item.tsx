@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { MusicTheme } from '@/constants/music-theme';
+
 type SongItemProps = {
   title: string;
   artist?: string;
@@ -14,7 +16,7 @@ export function SongItem({ title, artist, trailing, highlight = false }: SongIte
         <Text style={[styles.title, highlight && styles.highlightTitle]} numberOfLines={1}>
           {title}
         </Text>
-        {artist ? <Text style={styles.artist}>{artist}</Text> : null}
+        {artist ? <Text style={styles.artist} numberOfLines={1}>{artist}</Text> : null}
       </View>
       {trailing ? <Text style={styles.trailing}>{trailing}</Text> : null}
     </View>
@@ -23,33 +25,35 @@ export function SongItem({ title, artist, trailing, highlight = false }: SongIte
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: 52,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EFEFEF',
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
+    paddingVertical: MusicTheme.spacing.sm,
+    paddingHorizontal: MusicTheme.spacing.md,
+    borderRadius: MusicTheme.radius.sm,
+    backgroundColor: MusicTheme.colors.surface,
   },
   textWrap: {
     flex: 1,
     justifyContent: 'center',
+    gap: 2,
   },
   title: {
-    color: '#111111',
-    fontSize: 17,
+    color: MusicTheme.colors.text,
+    fontSize: 16,
     fontWeight: '700',
   },
   highlightTitle: {
-    color: '#FF00FF',
+    color: MusicTheme.colors.primary,
   },
   artist: {
-    marginTop: 4,
-    color: '#333333',
-    fontSize: 14,
+    color: MusicTheme.colors.textSecondary,
+    fontSize: 13,
   },
   trailing: {
-    color: '#111111',
+    color: MusicTheme.colors.textMuted,
     fontSize: 13,
     fontWeight: '600',
   },

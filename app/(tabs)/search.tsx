@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { MusicTheme } from '@/constants/music-theme';
 import { AppScreen } from '@/components/music/app-screen';
 import { PinkButton } from '@/components/music/pink-button';
 import { SearchInput } from '@/components/music/search-input';
@@ -110,19 +111,20 @@ export default function SearchScreen() {
 
   return (
     <AppScreen>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>TJ 곡검색</Text>
+        <Text style={styles.subtitle}>TJ 번호, 가수, 곡명으로 검색하세요</Text>
 
         <SearchInput value={query} onChangeText={setQuery} />
         <View style={styles.searchActionWrap}>
           <PinkButton
             label={loading ? '검색중...' : '곡검색'}
-            icon={<MaterialCommunityIcons name="magnify" size={16} color="#FFFFFF" />}
+            icon={<MaterialCommunityIcons name="magnify" size={18} color="#FFFFFF" />}
             onPress={searchSongs}
           />
         </View>
 
-        <Text style={styles.sectionTitle}>추가할 플레이리스트 선택</Text>
+        <Text style={styles.sectionTitle}>추가할 플레이리스트</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.playlistRow}>
           {playlistOptions.map((playlist) => {
             const active = selectedPlaylistId === playlist.id;
@@ -130,8 +132,11 @@ export default function SearchScreen() {
               <Pressable
                 key={playlist.id}
                 onPress={() => setSelectedPlaylistId(playlist.id)}
-                style={[styles.playlistChip, active && styles.playlistChipActive]}>
-                <Text style={[styles.playlistChipText, active && styles.playlistChipTextActive]}>{playlist.name}</Text>
+                style={[styles.playlistChip, active && styles.playlistChipActive]}
+              >
+                <Text style={[styles.playlistChipText, active && styles.playlistChipTextActive]} numberOfLines={1}>
+                  {playlist.name}
+                </Text>
               </Pressable>
             );
           })}
@@ -142,7 +147,11 @@ export default function SearchScreen() {
           <SongResultRow key={song.id} song={song} onAddToPlaylist={addSong} onOpenYoutube={openYoutube} />
         ))}
 
-        {!results.length && !loading ? <Text style={styles.emptyText}>{message || '검색 결과가 여기에 표시됩니다.'}</Text> : null}
+        {!results.length && !loading ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>{message || '검색 결과가 여기에 표시됩니다.'}</Text>
+          </View>
+        ) : null}
       </ScrollView>
     </AppScreen>
   );
@@ -150,99 +159,110 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 22,
-    gap: 10,
+    paddingBottom: 28,
+    gap: 14,
   },
   title: {
-    marginTop: 8,
-    marginBottom: 8,
-    color: '#111111',
-    fontSize: 30,
-    fontWeight: '900',
-    textAlign: 'center',
+    marginTop: 4,
+    color: MusicTheme.colors.text,
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    color: MusicTheme.colors.textMuted,
+    fontSize: 14,
+    marginBottom: 4,
   },
   searchActionWrap: {
     alignSelf: 'flex-end',
   },
   sectionTitle: {
-    color: '#111111',
-    fontSize: 16,
-    fontWeight: '800',
+    color: MusicTheme.colors.text,
+    fontSize: 17,
+    fontWeight: '700',
+    marginTop: 4,
   },
   playlistRow: {
-    gap: 8,
-    paddingVertical: 4,
-    paddingRight: 12,
+    gap: 10,
+    paddingVertical: 6,
+    paddingRight: 4,
   },
   playlistChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: '#CFCFCF',
-    backgroundColor: '#FFFFFF',
+    borderRadius: MusicTheme.radius.full,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: MusicTheme.colors.border,
+    backgroundColor: MusicTheme.colors.surface,
   },
   playlistChipActive: {
-    borderColor: '#FF00FF',
-    backgroundColor: '#FFF2FF',
+    borderColor: MusicTheme.colors.primary,
+    backgroundColor: MusicTheme.colors.primaryLight,
   },
   playlistChipText: {
-    color: '#444444',
-    fontSize: 13,
+    color: MusicTheme.colors.textSecondary,
+    fontSize: 14,
     fontWeight: '700',
+    maxWidth: 120,
   },
   playlistChipTextActive: {
-    color: '#C900C9',
+    color: MusicTheme.colors.primary,
   },
   songRow: {
-    borderWidth: 1,
-    borderColor: '#ECECEC',
-    borderRadius: 12,
-    padding: 10,
-    backgroundColor: '#FFFFFF',
-    gap: 8,
+    borderRadius: MusicTheme.radius.lg,
+    padding: MusicTheme.spacing.md,
+    backgroundColor: MusicTheme.colors.surface,
+    gap: 10,
+    ...MusicTheme.shadow.card,
   },
   songTextWrap: {
     gap: 2,
   },
   songTitle: {
-    color: '#111111',
+    color: MusicTheme.colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   songArtist: {
-    color: '#333333',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 14,
   },
   songNo: {
-    color: '#666666',
+    color: MusicTheme.colors.textMuted,
     fontSize: 12,
     fontWeight: '700',
   },
   rowActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
+    gap: 10,
   },
   ghostButton: {
-    minWidth: 58,
-    minHeight: 36,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D2D2D2',
+    minWidth: 60,
+    minHeight: 38,
+    borderRadius: MusicTheme.radius.md,
+    borderWidth: 1.5,
+    borderColor: MusicTheme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    backgroundColor: MusicTheme.colors.surface,
   },
   ghostButtonText: {
-    color: '#222222',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 13,
     fontWeight: '700',
   },
+  emptyCard: {
+    marginTop: 8,
+    padding: MusicTheme.spacing.lg,
+    borderRadius: MusicTheme.radius.lg,
+    backgroundColor: MusicTheme.colors.surface,
+    alignItems: 'center',
+  },
   emptyText: {
-    marginTop: 6,
-    color: '#666666',
+    color: MusicTheme.colors.textMuted,
     fontSize: 14,
   },
 });
