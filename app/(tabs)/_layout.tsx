@@ -53,6 +53,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="my-music"
+        options={{
+          title: '내 음악',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="music-box-multiple" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="reservation"
         options={{
           title: '신곡 알림',
