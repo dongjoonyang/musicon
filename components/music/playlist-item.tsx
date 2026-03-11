@@ -63,15 +63,16 @@ const styles = StyleSheet.create({
   },
   title: {
     color: MusicTheme.colors.text,
-    fontWeight: '700',
-    fontSize: 16,
+    fontWeight: '600',
+    fontSize: 17,
   },
   activeTitle: {
     color: MusicTheme.colors.primary,
+    fontWeight: '700',
   },
   count: {
     color: MusicTheme.colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

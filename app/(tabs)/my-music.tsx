@@ -24,6 +24,7 @@ import {
   YOUTUBE_DISCOVERY,
   YOUTUBE_SCOPES,
 } from '@/constants/music';
+import { MusicTheme } from '@/constants/music-theme'; // Import MusicTheme
 import { useMusic } from '@/contexts/music-context';
 import { usePushToken } from '@/contexts/push-token-context';
 import {
@@ -246,7 +247,7 @@ export default function MyMusicScreen() {
     return (
       <AppScreen>
         <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color="#FF00FF" />
+          <ActivityIndicator size="large" color={MusicTheme.colors.primary} />
         </View>
       </AppScreen>
     );
@@ -260,8 +261,8 @@ export default function MyMusicScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadAll(true)}
-            tintColor="#FF00FF"
-            colors={['#FF00FF']}
+            tintColor={MusicTheme.colors.primary}
+            colors={[MusicTheme.colors.primary]}
           />
         }
       >
@@ -302,7 +303,7 @@ export default function MyMusicScreen() {
               label={syncing ? '동기화 중...' : '트랙 동기화'}
               icon={
                 syncing ? undefined : (
-                  <MaterialCommunityIcons name="sync" size={18} color="#FFFFFF" />
+                  <MaterialCommunityIcons name="sync" size={18} color={MusicTheme.colors.white} />
                 )
               }
               onPress={syncing ? undefined : handleSync}
@@ -375,7 +376,7 @@ function ProviderCard({
           )}
         </View>
         {connecting ? (
-          <ActivityIndicator size="small" color="#FF00FF" />
+          <ActivityIndicator size="small" color={MusicTheme.colors.primary} />
         ) : account ? (
           <Pressable onPress={onDisconnect} style={styles.disconnectButton}>
             <Text style={styles.disconnectText}>해제</Text>
@@ -444,8 +445,9 @@ function MatchCard({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 30,
-    gap: 10,
+    paddingHorizontal: MusicTheme.spacing.lg, // Added horizontal padding
+    paddingBottom: MusicTheme.spacing.xl,
+    gap: MusicTheme.spacing.md,
   },
   loadingWrap: {
     flex: 1,
@@ -453,133 +455,140 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    marginTop: 8,
-    color: '#111111',
+    marginTop: MusicTheme.spacing.md,
+    color: MusicTheme.colors.text,
     fontSize: 32,
-    fontWeight: '900',
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#666666',
-    fontSize: 13,
+    color: MusicTheme.colors.textSecondary,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: MusicTheme.spacing.sm,
   },
   sectionTitle: {
-    marginTop: 8,
-    color: '#111111',
-    fontSize: 16,
-    fontWeight: '800',
+    marginTop: MusicTheme.spacing.md,
+    color: MusicTheme.colors.text,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: MusicTheme.spacing.sm,
   },
   errorWrap: {
-    borderRadius: 10,
-    backgroundColor: '#FFF0F0',
+    borderRadius: MusicTheme.radius.md,
+    backgroundColor: MusicTheme.colors.warningBg,
     borderWidth: 1,
-    borderColor: '#FFD0D0',
-    padding: 10,
+    borderColor: MusicTheme.colors.warning,
+    padding: MusicTheme.spacing.md,
+    marginBottom: MusicTheme.spacing.md,
   },
   errorText: {
-    color: '#CC0000',
-    fontSize: 13,
+    color: MusicTheme.colors.warning,
+    fontSize: 14,
     fontWeight: '600',
   },
   providerCard: {
-    borderRadius: 14,
+    borderRadius: MusicTheme.radius.lg,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
-    backgroundColor: '#FFFFFF',
-    padding: 14,
+    borderColor: MusicTheme.colors.border,
+    backgroundColor: MusicTheme.colors.surface,
+    padding: MusicTheme.spacing.md,
+    ...MusicTheme.shadow.card,
   },
   providerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: MusicTheme.spacing.md,
   },
   providerTextWrap: {
     flex: 1,
     gap: 2,
   },
   providerName: {
-    color: '#111111',
+    color: MusicTheme.colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   providerAccount: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   providerDisconnected: {
-    color: '#999999',
+    color: MusicTheme.colors.textMuted,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   connectButton: {
     minWidth: 60,
     minHeight: 36,
-    borderRadius: 10,
-    backgroundColor: '#FF00FF',
+    borderRadius: MusicTheme.radius.md,
+    backgroundColor: MusicTheme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: MusicTheme.spacing.md,
   },
   connectText: {
-    color: '#FFFFFF',
+    color: MusicTheme.colors.white,
     fontSize: 14,
     fontWeight: '700',
   },
   disconnectButton: {
     minWidth: 52,
     minHeight: 36,
-    borderRadius: 10,
+    borderRadius: MusicTheme.radius.md,
     borderWidth: 1,
-    borderColor: '#D5D5D5',
-    backgroundColor: '#FFFFFF',
+    borderColor: MusicTheme.colors.border,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: MusicTheme.spacing.sm,
   },
   disconnectText: {
-    color: '#666666',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   disabledButton: {
-    opacity: 0.4,
+    opacity: 0.5,
   },
   syncSection: {
-    marginTop: 4,
+    marginTop: MusicTheme.spacing.md,
     alignItems: 'center',
-    gap: 8,
+    gap: MusicTheme.spacing.sm,
   },
   syncHint: {
-    color: '#888888',
+    color: MusicTheme.colors.textMuted,
     fontSize: 12,
     textAlign: 'center',
+    paddingHorizontal: MusicTheme.spacing.lg,
   },
   emptyWrap: {
-    marginTop: 6,
-    borderRadius: 14,
+    marginTop: MusicTheme.spacing.sm,
+    borderRadius: MusicTheme.radius.lg,
     borderWidth: 1,
-    borderColor: '#ECECEC',
-    backgroundColor: '#FAFAFA',
-    padding: 14,
-    gap: 4,
+    borderColor: MusicTheme.colors.borderLight,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
+    padding: MusicTheme.spacing.md,
+    gap: MusicTheme.spacing.xs,
   },
   emptyTitle: {
-    color: '#222222',
-    fontSize: 14,
-    fontWeight: '800',
+    color: MusicTheme.colors.text,
+    fontSize: 15,
+    fontWeight: '700',
   },
   emptyDesc: {
-    color: '#666666',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 13,
+    lineHeight: 18,
   },
   matchCard: {
-    borderRadius: 14,
+    borderRadius: MusicTheme.radius.lg,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    gap: 8,
+    borderColor: MusicTheme.colors.border,
+    backgroundColor: MusicTheme.colors.surface,
+    padding: MusicTheme.spacing.md,
+    gap: MusicTheme.spacing.sm,
+    ...MusicTheme.shadow.card,
   },
   matchTextWrap: {
     gap: 3,
@@ -588,49 +597,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    gap: MusicTheme.spacing.sm,
   },
   matchTitle: {
     flex: 1,
-    color: '#111111',
+    color: MusicTheme.colors.text,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   matchTjNumber: {
-    color: '#FF00FF',
-    fontSize: 13,
-    fontWeight: '800',
+    color: MusicTheme.colors.primary,
+    fontSize: 14,
+    fontWeight: '700',
   },
   matchArtist: {
-    color: '#444444',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   matchMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 2,
+    marginTop: MusicTheme.spacing.xs,
   },
   providerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
+    borderRadius: MusicTheme.radius.sm,
+    paddingHorizontal: MusicTheme.spacing.sm,
+    paddingVertical: 4,
   },
   providerBadgeText: {
-    color: '#777777',
+    color: MusicTheme.colors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
     maxWidth: 180,
   },
   matchScore: {
-    color: '#999999',
+    color: MusicTheme.colors.textMuted,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   matchActions: {
     flexDirection: 'row',

@@ -119,7 +119,7 @@ export default function SearchScreen() {
         <View style={styles.searchActionWrap}>
           <PinkButton
             label={loading ? '검색중...' : '곡검색'}
-            icon={<MaterialCommunityIcons name="magnify" size={18} color="#FFFFFF" />}
+            icon={<MaterialCommunityIcons name="magnify" size={18} color={MusicTheme.colors.white} />}
             onPress={searchSongs}
           />
         </View>
@@ -159,39 +159,40 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 28,
-    gap: 14,
+    paddingHorizontal: MusicTheme.spacing.lg,
+    paddingBottom: MusicTheme.spacing.xl,
+    gap: MusicTheme.spacing.md,
   },
   title: {
-    marginTop: 4,
+    marginTop: MusicTheme.spacing.sm,
     color: MusicTheme.colors.text,
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '800',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: MusicTheme.colors.textMuted,
-    fontSize: 14,
-    marginBottom: 4,
+    color: MusicTheme.colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: MusicTheme.spacing.sm,
   },
   searchActionWrap: {
     alignSelf: 'flex-end',
   },
   sectionTitle: {
     color: MusicTheme.colors.text,
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
-    marginTop: 4,
+    marginTop: MusicTheme.spacing.sm,
   },
   playlistRow: {
-    gap: 10,
-    paddingVertical: 6,
-    paddingRight: 4,
+    gap: MusicTheme.spacing.sm,
+    paddingVertical: MusicTheme.spacing.xs,
   },
   playlistChip: {
     borderRadius: MusicTheme.radius.full,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderWidth: 1.5,
     borderColor: MusicTheme.colors.border,
     backgroundColor: MusicTheme.colors.surface,
@@ -203,17 +204,18 @@ const styles = StyleSheet.create({
   playlistChipText: {
     color: MusicTheme.colors.textSecondary,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
     maxWidth: 120,
   },
   playlistChipTextActive: {
     color: MusicTheme.colors.primary,
+    fontWeight: '700',
   },
   songRow: {
     borderRadius: MusicTheme.radius.lg,
     padding: MusicTheme.spacing.md,
     backgroundColor: MusicTheme.colors.surface,
-    gap: 10,
+    gap: MusicTheme.spacing.sm,
     ...MusicTheme.shadow.card,
   },
   songTextWrap: {
@@ -221,22 +223,24 @@ const styles = StyleSheet.create({
   },
   songTitle: {
     color: MusicTheme.colors.text,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
   },
   songArtist: {
     color: MusicTheme.colors.textSecondary,
     fontSize: 14,
+    fontWeight: '500',
   },
   songNo: {
-    color: MusicTheme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    color: MusicTheme.colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
   },
   rowActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 10,
+    gap: MusicTheme.spacing.sm,
   },
   ghostButton: {
     minWidth: 60,
@@ -246,23 +250,24 @@ const styles = StyleSheet.create({
     borderColor: MusicTheme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: MusicTheme.spacing.md,
     backgroundColor: MusicTheme.colors.surface,
   },
   ghostButtonText: {
     color: MusicTheme.colors.textSecondary,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   emptyCard: {
-    marginTop: 8,
+    marginTop: MusicTheme.spacing.sm,
     padding: MusicTheme.spacing.lg,
     borderRadius: MusicTheme.radius.lg,
-    backgroundColor: MusicTheme.colors.surface,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
     alignItems: 'center',
   },
   emptyText: {
     color: MusicTheme.colors.textMuted,
     fontSize: 14,
+    fontWeight: '500',
   },
 });

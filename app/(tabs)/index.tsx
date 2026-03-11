@@ -81,14 +81,14 @@ const styles = StyleSheet.create({
   },
   brand: {
     color: MusicTheme.colors.text,
-    fontSize: 32,
+    fontSize: 36, // Increased size for impact
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -0.8, // Tighter letter spacing
   },
   subTitle: {
     color: MusicTheme.colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16, // Slightly larger
+    fontWeight: '500', // Reduced weight for softer look
     marginBottom: 4,
   },
   subHeader: {
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   createCard: {
-    marginHorizontal: MusicTheme.spacing.lg,
+    // No marginHorizontal, let it be controlled by parent padding
     marginBottom: MusicTheme.spacing.md,
     padding: MusicTheme.spacing.md,
     borderRadius: MusicTheme.radius.lg,
@@ -127,14 +127,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   createInput: {
-    minHeight: 44,
+    minHeight: 48, // Increased height for better touch target
     borderWidth: 1.5,
     borderColor: MusicTheme.colors.border,
     borderRadius: MusicTheme.radius.md,
     paddingHorizontal: 14,
     color: MusicTheme.colors.text,
-    fontSize: 15,
-    backgroundColor: MusicTheme.colors.surface,
+    fontSize: 16, // Larger font size
+    backgroundColor: MusicTheme.colors.surfaceAlt, // Subtle background color
   },
   cancelBtn: {
     paddingVertical: 10,

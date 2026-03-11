@@ -6,17 +6,17 @@ import { Platform } from 'react-native';
 
 export const MusicTheme = {
   colors: {
-    primary: '#C71585',       // 미디엄 바이올렛 레드 (세련된 핑크)
-    primaryLight: '#FCE4F0',
-    primaryDark: '#9B0B50',
+    primary: '#FF4081',       // Vibrant Pink
+    primaryLight: '#FFD1E0',  // Light Pink
+    primaryDark: '#C5004A',   // Deep Pink
     surface: '#FFFFFF',
-    surfaceAlt: '#FAF8FC',
-    background: '#F5F2F8',
-    border: '#E8E4ED',
-    borderLight: '#EFECF2',
-    text: '#1A1A1A',
-    textSecondary: '#5C5C5C',
-    textMuted: '#8E8E93',
+    surfaceAlt: '#F8F8FA',    // Softer alternative surface
+    background: '#F0F2F5',    // Softer, cooler background
+    border: '#E0E0E0',        // Lighter, softer border
+    borderLight: '#F0F0F0',
+    text: '#212121',          // Darker for better contrast
+    textSecondary: '#616161', // Good contrast, still secondary
+    textMuted: '#9E9E9E',     // Softer muted text
     white: '#FFFFFF',
     success: '#00796B',
     successBg: '#E0F2F1',
@@ -32,23 +32,23 @@ export const MusicTheme = {
   },
   shadow: {
     card: Platform.select({
-      web: { boxShadow: '0px 2px 8px rgba(0,0,0,0.06)' },
+      web: { boxShadow: '0px 4px 12px rgba(0,0,0,0.08)' },
       default: {
-        shadowColor: '#1A1A1A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 3,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 6,
       },
     }),
     button: Platform.select({
-      web: { boxShadow: '0px 2px 4px rgba(199,21,133,0.2)' },
+      web: { boxShadow: '0px 4px 8px rgba(255,64,129,0.25)' }, // Using new primary color
       default: {
-        shadowColor: '#C71585',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowColor: '#FF4081', // Using new primary color
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
       },
     }),
   },

@@ -20,8 +20,8 @@ export function PinkButton({ label, onPress, icon }: PinkButtonProps) {
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 44,
-    paddingHorizontal: 18,
+    minHeight: 48, // Increased height
+    paddingHorizontal: 22, // Increased padding
     borderRadius: MusicTheme.radius.md,
     backgroundColor: MusicTheme.colors.primary,
     alignItems: 'center',
@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.88,
+    transform: [{ scale: 0.98 }], // Add a subtle scale effect on press
   },
   iconWrap: {
     alignItems: 'center',
@@ -40,6 +41,6 @@ const styles = StyleSheet.create({
   label: {
     color: MusicTheme.colors.white,
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 16, // Increased font size
   },
 });
