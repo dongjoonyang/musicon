@@ -1,8 +1,18 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { MusicTheme } from '@/constants/music-theme';
+
+function TabIcon({ name, color }: { name: string; color: string; focused: boolean }) {
+  return (
+    <MaterialCommunityIcons
+      name={name as keyof typeof MaterialCommunityIcons.glyphMap}
+      size={22}
+      color={color}
+    />
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -12,34 +22,36 @@ export default function TabLayout() {
         tabBarActiveTintColor: MusicTheme.colors.primary,
         tabBarInactiveTintColor: MusicTheme.colors.textMuted,
         tabBarStyle: {
-          height: 72,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 100 : Platform.OS === 'web' ? 80 : 72,
+          paddingBottom: Platform.OS === 'ios' ? 32 : Platform.OS === 'web' ? 8 : 12,
+          paddingTop: Platform.OS === 'web' ? 12 : 10,
           backgroundColor: MusicTheme.colors.surface,
           borderTopWidth: 1,
-          borderTopColor: MusicTheme.colors.borderLight,
+          borderTopColor: MusicTheme.colors.border,
           ...Platform.select({
-            web: { boxShadow: '0px -2px 8px rgba(0,0,0,0.04)' },
+            web: { boxShadow: '0px -1px 0px rgba(0,0,0,0.06)' },
             ios: {
-              shadowColor: '#1A1A1A',
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.04,
-              shadowRadius: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 4,
             },
-            default: { elevation: 8 },
+            default: { elevation: 6 },
           }),
         },
+        tabBarShowLabel: true,
         tabBarLabelStyle: {
-          fontWeight: '700',
+          fontWeight: '600',
           fontSize: 11,
+          marginTop: 2,
         },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: '플레이리스트',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="playlist-music" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="playlist-music" color={color} focused={focused} />
           ),
         }}
       />
@@ -47,8 +59,8 @@ export default function TabLayout() {
         name="search"
         options={{
           title: '검색',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="magnify" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="magnify" color={color} focused={focused} />
           ),
         }}
       />
@@ -56,8 +68,8 @@ export default function TabLayout() {
         name="my-music"
         options={{
           title: '내 음악',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="music-box-multiple" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="music-box-multiple" color={color} focused={focused} />
           ),
         }}
       />
@@ -65,8 +77,8 @@ export default function TabLayout() {
         name="reservation"
         options={{
           title: '신곡 알림',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="bell-ring-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="bell-ring-outline" color={color} focused={focused} />
           ),
         }}
       />
