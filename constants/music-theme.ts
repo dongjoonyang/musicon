@@ -1,38 +1,27 @@
 /**
- * Music On 앱 전용 디자인 토큰 — Toss Style
+ * Music On 앱 전용 디자인 토큰
  */
 
 import { Platform } from 'react-native';
 
 export const MusicTheme = {
   colors: {
-    // Primary — Toss Blue
-    primary: '#0067EB',
-    primaryLight: '#EAF2FF',
-    primaryDark: '#0050BE',
-
-    // Surfaces
+    primary: '#C71585',       // 미디엄 바이올렛 레드 (세련된 핑크)
+    primaryLight: '#FCE4F0',
+    primaryDark: '#9B0B50',
     surface: '#FFFFFF',
-    surfaceAlt: '#F8F9FA',
-    background: '#F2F4F6',
-
-    // Borders
-    border: '#E5E8EB',
-    borderLight: '#F2F4F6',
-
-    // Typography
-    text: '#191F28',
-    textSecondary: '#6B7684',
-    textMuted: '#8B95A1',
-
-    // Misc
+    surfaceAlt: '#FAF8FC',
+    background: '#F5F2F8',
+    border: '#E8E4ED',
+    borderLight: '#EFECF2',
+    text: '#1A1A1A',
+    textSecondary: '#5C5C5C',
+    textMuted: '#8E8E93',
     white: '#FFFFFF',
-
-    // Semantic
-    success: '#00B852',
-    successBg: '#EDFAF0',
-    warning: '#FF6B00',
-    warningBg: '#FFF5ED',
+    success: '#00796B',
+    successBg: '#E0F2F1',
+    warning: '#CE007D',
+    warningBg: '#FFF4FB',
   },
   radius: {
     sm: 8,
@@ -45,7 +34,7 @@ export const MusicTheme = {
     card: Platform.select({
       web: { boxShadow: '0px 2px 8px rgba(0,0,0,0.06)' },
       default: {
-        shadowColor: '#000000',
+        shadowColor: '#1A1A1A',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
@@ -53,21 +42,21 @@ export const MusicTheme = {
       },
     }),
     button: Platform.select({
-      web: { boxShadow: '0px 4px 12px rgba(0,103,235,0.22)' },
+      web: { boxShadow: '0px 2px 4px rgba(199,21,133,0.2)' },
       default: {
-        shadowColor: '#0067EB',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.22,
-        shadowRadius: 12,
-        elevation: 4,
+        shadowColor: '#C71585',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 2,
       },
     }),
   },
   spacing: {
     xs: 4,
     sm: 8,
-    md: 16,
-    lg: 20,
-    xl: 24,
+    md: 12,
+    lg: 16,
+    xl: 20,
   },
 } as const;

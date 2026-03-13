@@ -16,7 +16,7 @@ export function PlaylistItem({ title, songCount, active = false, onPress }: Play
       <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
         <MaterialCommunityIcons
           name="playlist-music"
-          size={20}
+          size={22}
           color={active ? MusicTheme.colors.primary : MusicTheme.colors.textSecondary}
         />
       </View>
@@ -24,18 +24,13 @@ export function PlaylistItem({ title, songCount, active = false, onPress }: Play
         <Text style={[styles.title, active && styles.activeTitle]} numberOfLines={1}>{title}</Text>
         <Text style={styles.count}>{songCount}곡</Text>
       </View>
-      <MaterialCommunityIcons
-        name="chevron-right"
-        size={20}
-        color={MusicTheme.colors.textMuted}
-      />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: 68,
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: MusicTheme.spacing.md,
@@ -48,7 +43,8 @@ const styles = StyleSheet.create({
     ...MusicTheme.shadow.card,
   },
   pressed: {
-    opacity: 0.88,
+    opacity: 0.92,
+    backgroundColor: MusicTheme.colors.surfaceAlt,
   },
   iconWrap: {
     width: 44,
@@ -63,20 +59,19 @@ const styles = StyleSheet.create({
   },
   leading: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   title: {
     color: MusicTheme.colors.text,
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 16,
   },
   activeTitle: {
     color: MusicTheme.colors.primary,
-    fontWeight: '700',
   },
   count: {
     color: MusicTheme.colors.textMuted,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });
