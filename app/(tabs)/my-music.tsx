@@ -272,7 +272,7 @@ export default function MyMusicScreen() {
               connecting={connecting === 'youtube'}
               onConnect={handleConnectYouTube}
               onDisconnect={() => handleDisconnect('youtube')}
-              disabled={!expoPushToken}
+              disabled={connecting === 'youtube'}
             />
           </View>
         </View>
