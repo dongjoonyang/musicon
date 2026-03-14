@@ -12,6 +12,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import * as AuthSession from 'expo-auth-session';
+import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 
 import { AppScreen } from '@/components/music/app-screen';
@@ -21,15 +22,15 @@ import {
   SPOTIFY_DISCOVERY,
   SPOTIFY_SCOPES,
   YOUTUBE_CLIENT_ID,
-  YOUTUBE_DISCOVERY,
   YOUTUBE_SCOPES,
 } from '@/constants/music';
 import { MusicTheme } from '@/constants/music-theme';
 import { useMusic } from '@/contexts/music-context';
 import { usePushToken } from '@/contexts/push-token-context';
+import { API_BASE_URL } from '@/services/api';
 import {
+  buildYouTubeAuthUrl,
   connectSpotify,
-  connectYouTube,
   disconnectMusicAccount,
   getMatches,
   listMusicAccounts,
@@ -58,7 +59,6 @@ export default function MyMusicScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const spotifyCodeConsumed = useRef<string | null>(null);
-  const youtubeCodeConsumed = useRef<string | null>(null);
 
   const redirectUri = AuthSession.makeRedirectUri();
 
@@ -71,18 +71,6 @@ export default function MyMusicScreen() {
       usePKCE: false,
     },
     SPOTIFY_DISCOVERY,
-  );
-
-  const [youtubeRequest, youtubeResponse, promptYouTube] = AuthSession.useAuthRequest(
-    {
-      clientId: YOUTUBE_CLIENT_ID,
-      scopes: YOUTUBE_SCOPES,
-      redirectUri,
-      responseType: AuthSession.ResponseType.Code,
-      usePKCE: false,
-      extraParams: { access_type: 'offline', prompt: 'consent' },
-    },
-    YOUTUBE_DISCOVERY,
   );
 
   const fetchAccounts = useCallback(async () => {
@@ -138,24 +126,28 @@ export default function MyMusicScreen() {
       .finally(() => setConnecting(null));
   }, [spotifyResponse, expoPushToken, redirectUri, fetchAccounts]);
 
-  useEffect(() => {
-    if (youtubeResponse?.type !== 'success' || !expoPushToken) return;
-    const code = youtubeResponse.params.code;
-    if (!code || youtubeCodeConsumed.current === code) return;
-    youtubeCodeConsumed.current = code;
+  const handleConnectYouTube = async () => {
+    if (!expoPushToken) return;
     setConnecting('youtube');
-    connectYouTube(code, redirectUri, expoPushToken)
-      .then((res) => {
-        if (res.success) {
+    try {
+      const authUrl = buildYouTubeAuthUrl(YOUTUBE_CLIENT_ID, YOUTUBE_SCOPES, expoPushToken, API_BASE_URL);
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, 'musicon://');
+      if (result.type === 'success') {
+        const parsed = Linking.parse(result.url);
+        if (parsed.path === 'auth-success') {
           Alert.alert('연결 완료', 'YouTube 계정이 연결되었습니다.');
           fetchAccounts();
         } else {
-          Alert.alert('연결 실패', res.error ?? 'YouTube 연결에 실패했습니다.');
+          const errorMsg = (parsed.queryParams?.error as string) || 'YouTube 연결에 실패했습니다.';
+          Alert.alert('연결 실패', errorMsg);
         }
-      })
-      .catch(() => Alert.alert('오류', 'YouTube 연결 중 오류가 발생했습니다.'))
-      .finally(() => setConnecting(null));
-  }, [youtubeResponse, expoPushToken, redirectUri, fetchAccounts]);
+      }
+    } catch {
+      Alert.alert('오류', 'YouTube 연결 중 오류가 발생했습니다.');
+    } finally {
+      setConnecting(null);
+    }
+  };
 
   const handleSync = async () => {
     if (!expoPushToken) return;
@@ -278,9 +270,9 @@ export default function MyMusicScreen() {
               provider="youtube"
               account={accounts.find((a) => a.provider === 'youtube')}
               connecting={connecting === 'youtube'}
-              onConnect={() => promptYouTube()}
+              onConnect={handleConnectYouTube}
               onDisconnect={() => handleDisconnect('youtube')}
-              disabled={!youtubeRequest}
+              disabled={!expoPushToken}
             />
           </View>
         </View>

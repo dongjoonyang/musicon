@@ -14,7 +14,3 @@ export const SPOTIFY_DISCOVERY = {
   tokenEndpoint: 'https://accounts.spotify.com/api/token',
 };
 
-export const YOUTUBE_DISCOVERY = {
-  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-  tokenEndpoint: 'https://oauth2.googleapis.com/token',
-};

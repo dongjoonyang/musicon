@@ -11,7 +11,7 @@ export type ApiResponse<T> = {
 };
 
 const DEV_URL = 'http://192.168.45.45:3000';
-const PROD_URL = 'http://158.179.160.120:7847';
+const PROD_URL = 'https://musicon.p-e.kr';
 
 export const API_BASE_URL = __DEV__ ? DEV_URL : PROD_URL;
 

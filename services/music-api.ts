@@ -16,19 +16,18 @@ export async function connectSpotify(
   });
 }
 
-export async function connectYouTube(
-  code: string,
-  redirectUri: string,
-  expoPushToken: string,
-): Promise<ApiResponse<MusicAccount>> {
-  return request<MusicAccount>('/api/music/youtube/connect', {
-    method: 'POST',
-    body: JSON.stringify({
-      code,
-      redirect_uri: redirectUri,
-      expo_push_token: expoPushToken,
-    }),
+export function buildYouTubeAuthUrl(clientId: string, scopes: string[], expoPushToken: string, baseUrl: string): string {
+  const redirectUri = `${baseUrl}/api/auth/youtube/callback`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: scopes.join(' '),
+    access_type: 'offline',
+    prompt: 'consent',
+    state: expoPushToken,
   });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
 export async function listMusicAccounts(
