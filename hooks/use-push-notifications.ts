@@ -17,35 +17,44 @@ Notifications.setNotificationHandler({
 });
 
 async function getExpoPushToken(): Promise<string | null> {
-  if (!Device.isDevice) {
-    return null;
-  }
+  try {
+    if (!Device.isDevice) {
+      console.warn('[Push] Not a physical device, skipping push token');
+      return null;
+    }
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+      });
+    }
+
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    let finalStatus = existing;
+
+    if (existing !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      console.warn('[Push] Permission not granted');
+      return null;
+    }
+
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      Constants.easConfig?.projectId;
+    const tokenData = await Notifications.getExpoPushTokenAsync({
+      projectId,
     });
-  }
 
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  let finalStatus = existing;
-
-  if (existing !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-
-  if (finalStatus !== 'granted') {
+    return tokenData.data;
+  } catch (error) {
+    console.error('[Push] Failed to get push token:', error);
     return null;
   }
-
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-  const tokenData = await Notifications.getExpoPushTokenAsync({
-    projectId,
-  });
-
-  return tokenData.data;
 }
 
 export function usePushNotifications() {
@@ -57,7 +66,9 @@ export function usePushNotifications() {
     getExpoPushToken().then((token) => {
       if (token) {
         setExpoPushToken(token);
-        registerDevice(token, Platform.OS).catch(() => {});
+        registerDevice(token, Platform.OS).catch((err) => {
+          console.warn('[Push] Device registration failed:', err);
+        });
       }
     });
 

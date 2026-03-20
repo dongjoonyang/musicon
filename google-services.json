@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "159754515713",
+    "project_id": "musicon-83e82",
+    "storage_bucket": "musicon-83e82.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:159754515713:android:8960e4d92d202aca535700",
+        "android_client_info": {
+          "package_name": "com.malhwan.musicon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZ4S_RgcNB8MjuE96XpJGLjYJzOue7ZcY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -15,11 +15,11 @@ export type Reservation = {
 export async function createReservation(
   token: string,
   artist: string,
-  title: string,
+  title?: string,
 ): Promise<ApiResponse<Reservation>> {
   return request<Reservation>('/api/reservations', {
     method: 'POST',
-    body: JSON.stringify({ expo_push_token: token, artist, title }),
+    body: JSON.stringify({ expo_push_token: token, artist, title: title ?? '' }),
   });
 }
 
@@ -33,11 +33,11 @@ export async function updateReservation(
   token: string,
   id: number,
   artist: string,
-  title: string,
+  title?: string,
 ): Promise<ApiResponse<Reservation>> {
   return request<Reservation>(`/api/reservations/${id}`, {
     method: 'PUT',
-    body: JSON.stringify({ expo_push_token: token, artist, title }),
+    body: JSON.stringify({ expo_push_token: token, artist, title: title ?? '' }),
   });
 }
 

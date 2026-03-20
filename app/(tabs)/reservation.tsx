@@ -120,33 +120,38 @@ export default function ReservationScreen() {
   const submitForm = async () => {
     const nextArtist = artist.trim();
     const nextTitle = title.trim();
-    if (!nextArtist || !nextTitle) {
-      Alert.alert('입력 필요', '아티스트와 제목을 모두 입력해주세요.');
+    if (!nextArtist) {
+      Alert.alert('입력 필요', '아티스트를 입력해주세요.');
       return;
     }
     if (!expoPushToken) {
       Alert.alert('알림', '푸시 알림을 사용할 수 없는 환경입니다.');
       return;
     }
-    if (mode === 'edit' && editingTarget) {
-      const res = await updateReservation(expoPushToken, editingTarget.id, nextArtist, nextTitle);
-      if (!res.success) {
-        Alert.alert('오류', '예약 수정에 실패했습니다.');
-        return;
+    try {
+      if (mode === 'edit' && editingTarget) {
+        const res = await updateReservation(expoPushToken, editingTarget.id, nextArtist, nextTitle);
+        if (!res.success) {
+          Alert.alert('오류', res.error ?? '예약 수정에 실패했습니다.');
+          return;
+        }
+      } else {
+        const res = await createReservation(expoPushToken, nextArtist, nextTitle);
+        if (!res.success) {
+          Alert.alert('오류', res.error ?? '예약 등록에 실패했습니다.');
+          return;
+        }
       }
-    } else {
-      const res = await createReservation(expoPushToken, nextArtist, nextTitle);
-      if (!res.success) {
-        Alert.alert('오류', '예약 등록에 실패했습니다.');
-        return;
-      }
+      closeSheet();
+      fetchReservations();
+    } catch {
+      Alert.alert('오류', '서버와 통신할 수 없습니다. 네트워크를 확인해주세요.');
     }
-    closeSheet();
-    fetchReservations();
   };
 
   const confirmDelete = (reservation: Reservation) => {
-    Alert.alert('삭제 확인', `"${reservation.title}" 알림을 삭제할까요?`, [
+    const label = reservation.title || `${reservation.artist} 모든 신곡`;
+    Alert.alert('삭제 확인', `"${label}" 알림을 삭제할까요?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',
@@ -165,6 +170,13 @@ export default function ReservationScreen() {
   };
 
   const isMatched = (reservation: Reservation) => reservation.status === 'matched';
+  const isArtistOnly = (reservation: Reservation) => !reservation.title;
+
+  const getBadgeInfo = (reservation: Reservation) => {
+    if (isMatched(reservation)) return { label: '매치됨', matched: true };
+    if (isArtistOnly(reservation)) return { label: '구독중', matched: false };
+    return { label: '대기중', matched: false };
+  };
 
   return (
     <AppScreen>
@@ -207,12 +219,14 @@ export default function ReservationScreen() {
                   <MaterialCommunityIcons name="bell-ring-outline" size={18} color={MusicTheme.colors.primary} />
                 </View>
                 <View style={styles.cardTextWrap}>
-                  <Text style={styles.cardTitle}>{reservation.title}</Text>
+                  <Text style={styles.cardTitle}>
+                    {reservation.title || '모든 신곡'}
+                  </Text>
                   <Text style={styles.cardArtist}>{reservation.artist}</Text>
                 </View>
-                <View style={isMatched(reservation) ? styles.matchedBadge : styles.pendingBadge}>
-                  <Text style={isMatched(reservation) ? styles.matchedText : styles.pendingText}>
-                    {isMatched(reservation) ? '매치됨' : '대기중'}
+                <View style={getBadgeInfo(reservation).matched ? styles.matchedBadge : styles.pendingBadge}>
+                  <Text style={getBadgeInfo(reservation).matched ? styles.matchedText : styles.pendingText}>
+                    {getBadgeInfo(reservation).label}
                   </Text>
                 </View>
               </View>
@@ -239,7 +253,7 @@ export default function ReservationScreen() {
             <View style={styles.emptyWrap}>
               <MaterialCommunityIcons name="bell-off-outline" size={40} color={MusicTheme.colors.border} />
               <Text style={styles.emptyTitle}>등록된 알림이 없습니다</Text>
-              <Text style={styles.emptyDesc}>추가 버튼으로 아티스트와 곡 제목을 등록하면{'\n'}TJ 등록 시 알려드립니다.</Text>
+              <Text style={styles.emptyDesc}>추가 버튼으로 아티스트를 등록하면{'\n'}TJ 신곡 등록 시 알려드립니다.</Text>
             </View>
           ) : null}
         </ScrollView>
@@ -262,11 +276,11 @@ export default function ReservationScreen() {
               style={styles.input}
             />
 
-            <Text style={styles.fieldLabel}>곡 제목</Text>
+            <Text style={styles.fieldLabel}>곡 제목 (선택)</Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
-              placeholder="곡 제목 입력"
+              placeholder="비우면 모든 신곡 알림"
               placeholderTextColor={MusicTheme.colors.textMuted}
               style={styles.input}
             />
