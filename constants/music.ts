@@ -7,7 +7,7 @@ export const YOUTUBE_CLIENT_ID: string = extra.youtubeClientId ?? '';
 
 export const SPOTIFY_SCOPES = ['user-top-read', 'user-library-read'];
 
-export const YOUTUBE_SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
+export const YOUTUBE_SCOPES = ['https://www.googleapis.com/auth/youtube'];
 
 export const SPOTIFY_DISCOVERY = {
   authorizationEndpoint: 'https://accounts.spotify.com/authorize',
