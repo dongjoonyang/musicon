@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,9 +36,12 @@ import {
   listMusicAccounts,
   syncTracks,
 } from '@/services/music-api';
+import { createReservation, listReservations } from '@/services/reservation-api';
 import type { MatchedTrackResult, MusicAccount, MusicProviderType } from '@/types/music';
 
 WebBrowser.maybeCompleteAuthSession();
+
+const MATCH_RESULTS_LIMIT = 200;
 
 const PROVIDER_META: Record<string, { label: string; icon: string; color: string; bg: string }> = {
   spotify: { label: 'Spotify', icon: 'spotify', color: '#1DB954', bg: '#F0FBF4' },
@@ -86,10 +89,29 @@ export default function MyMusicScreen() {
   const fetchMatches = useCallback(async () => {
     if (!expoPushToken) return;
     try {
-      const res = await getMatches(expoPushToken, 50, 0);
+      const res = await getMatches(expoPushToken, MATCH_RESULTS_LIMIT, 0);
       if (res.success && res.data) setMatches(res.data);
     } catch {
       setError('매칭 결과를 불러오지 못했습니다.');
+    }
+  }, [expoPushToken]);
+
+  const [reservedKeys, setReservedKeys] = useState<Set<string>>(new Set());
+  const [reservingTrackId, setReservingTrackId] = useState<number | null>(null);
+
+  const makeReservationKey = (artist: string, title: string) =>
+    `${artist.toLowerCase()}::${title.toLowerCase()}`;
+
+  const fetchReservations = useCallback(async () => {
+    if (!expoPushToken) return;
+    try {
+      const res = await listReservations(expoPushToken);
+      if (res.success && res.data) {
+        const keys = new Set(res.data.map((r) => makeReservationKey(r.artist, r.title)));
+        setReservedKeys(keys);
+      }
+    } catch {
+      // 예약 목록 로드 실패는 무시 (핵심 기능이 아님)
     }
   }, [expoPushToken]);
 
@@ -97,10 +119,10 @@ export default function MyMusicScreen() {
     async (isRefresh = false) => {
       setError(null);
       isRefresh ? setRefreshing(true) : setLoading(true);
-      await Promise.all([fetchAccounts(), fetchMatches()]);
+      await Promise.all([fetchAccounts(), fetchMatches(), fetchReservations()]);
       isRefresh ? setRefreshing(false) : setLoading(false);
     },
-    [fetchAccounts, fetchMatches],
+    [fetchAccounts, fetchMatches, fetchReservations],
   );
 
   useEffect(() => {
@@ -215,7 +237,40 @@ export default function MyMusicScreen() {
     Alert.alert('추가 완료', `${tjSong.title} (TJ ${tjSong.tjNumber})이 플레이리스트에 추가되었습니다.`);
   };
 
-  const matchedResults = matches.filter((m) => m.status === 'matched' && m.song);
+  const handleReserve = async (match: MatchedTrackResult) => {
+    if (!expoPushToken) return;
+    setReservingTrackId(match.track.id);
+    try {
+      const res = await createReservation(expoPushToken, match.track.artist, match.track.title);
+      if (res.success) {
+        const key = makeReservationKey(match.track.artist, match.track.title);
+        setReservedKeys((prev) => {
+          const next = new Set(prev);
+          next.add(key);
+          return next;
+        });
+        Alert.alert('예약 완료', `"${match.track.title}" 신곡 예약이 등록되었습니다.`);
+      } else {
+        Alert.alert('예약 실패', res.error ?? '신곡 예약에 실패했습니다.');
+      }
+    } catch {
+      Alert.alert('오류', '신곡 예약 중 오류가 발생했습니다.');
+    } finally {
+      setReservingTrackId(null);
+    }
+  };
+
+  const isTrackReserved = (track: { artist: string; title: string }) =>
+    reservedKeys.has(makeReservationKey(track.artist, track.title));
+
+  const matchedResults = useMemo(
+    () => matches.filter((m) => m.status === 'matched' && m.song),
+    [matches],
+  );
+  const unmatchedResults = useMemo(
+    () => matches.filter((m) => m.status === 'unmatched'),
+    [matches],
+  );
 
   if (loading) {
     return (
@@ -304,10 +359,30 @@ export default function MyMusicScreen() {
               <MatchCard key={match.track.id} match={match} onAdd={() => handleAddToPlaylist(match)} />
             ))}
           </View>
-        ) : accounts.length > 0 ? (
+        ) : null}
+
+        {/* 미매칭 곡 */}
+        {unmatchedResults.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>미매칭 곡 ({unmatchedResults.length})</Text>
+            <Text style={styles.unmatchedHint}>TJ에 없는 곡입니다. 예약하면 신곡 등록 시 알림을 받을 수 있어요.</Text>
+            {unmatchedResults.map((match) => (
+              <UnmatchedCard
+                key={match.track.id}
+                match={match}
+                reserved={isTrackReserved(match.track)}
+                reserving={reservingTrackId === match.track.id}
+                onReserve={() => handleReserve(match)}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {/* 빈 상태 */}
+        {matches.length === 0 && accounts.length > 0 ? (
           <View style={styles.emptyMatches}>
             <MaterialCommunityIcons name="music-off" size={32} color={MusicTheme.colors.border} />
-            <Text style={styles.emptyTitle}>매칭된 곡이 없습니다</Text>
+            <Text style={styles.emptyTitle}>동기화된 곡이 없습니다</Text>
             <Text style={styles.emptyDesc}>동기화 버튼을 눌러 음악 서비스의 곡들을 TJ 번호와 매칭해보세요.</Text>
           </View>
         ) : null}
@@ -405,6 +480,61 @@ function MatchCard({ match, onAdd }: { match: MatchedTrackResult; onAdd: () => v
         <MaterialCommunityIcons name="plus" size={16} color={MusicTheme.colors.primary} />
         <Text style={styles.matchAddText}>플리</Text>
       </Pressable>
+    </View>
+  );
+}
+
+function UnmatchedCard({
+  match,
+  reserved,
+  reserving,
+  onReserve,
+}: {
+  match: MatchedTrackResult;
+  reserved: boolean;
+  reserving: boolean;
+  onReserve: () => void;
+}) {
+  const { track } = match;
+  const providerMeta = PROVIDER_META[track.provider];
+
+  return (
+    <View style={styles.matchCard}>
+      <View style={styles.matchLeft}>
+        <View style={styles.unmatchedBadge}>
+          <MaterialCommunityIcons name="music-note-off" size={16} color={MusicTheme.colors.textMuted} />
+        </View>
+      </View>
+      <View style={styles.matchTextWrap}>
+        <Text style={styles.matchTitle} numberOfLines={1}>{track.title}</Text>
+        <Text style={styles.matchArtist} numberOfLines={1}>{track.artist}</Text>
+        <View style={styles.matchMeta}>
+          {providerMeta ? (
+            <MaterialCommunityIcons
+              name={providerMeta.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+              size={12}
+              color={providerMeta.color}
+            />
+          ) : null}
+          <Text style={styles.matchScore}>미매칭</Text>
+        </View>
+      </View>
+      {reserving ? (
+        <ActivityIndicator size="small" color={MusicTheme.colors.primary} />
+      ) : reserved ? (
+        <View style={styles.reservedBadge}>
+          <MaterialCommunityIcons name="check" size={14} color={MusicTheme.colors.success} />
+          <Text style={styles.reservedText}>예약됨</Text>
+        </View>
+      ) : (
+        <Pressable
+          onPress={onReserve}
+          style={({ pressed }) => [styles.reserveBtn, pressed && { opacity: 0.75 }]}
+        >
+          <MaterialCommunityIcons name="bell-plus-outline" size={14} color={MusicTheme.colors.warning} />
+          <Text style={styles.reserveBtnText}>예약</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -615,6 +745,47 @@ const styles = StyleSheet.create({
   },
   matchAddText: {
     color: MusicTheme.colors.primary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  unmatchedHint: {
+    color: MusicTheme.colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  unmatchedBadge: {
+    minWidth: 44,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: MusicTheme.radius.sm,
+    backgroundColor: MusicTheme.colors.borderLight,
+    alignItems: 'center',
+  },
+  reserveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: MusicTheme.radius.sm,
+    backgroundColor: MusicTheme.colors.warningBg,
+  },
+  reserveBtnText: {
+    color: MusicTheme.colors.warning,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  reservedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: MusicTheme.radius.sm,
+    backgroundColor: MusicTheme.colors.successBg,
+  },
+  reservedText: {
+    color: MusicTheme.colors.success,
     fontSize: 13,
     fontWeight: '700',
   },
