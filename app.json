@@ -65,7 +65,7 @@
     "extra": {
       "router": {},
       "spotifyClientId": "YOUR_SPOTIFY_CLIENT_ID",
-      "youtubeClientId": "YOUR_YOUTUBE_CLIENT_ID",
+      "youtubeClientId": "159754515713-4sjb8l9fsl66a3jji44tpt0prihmaqft.apps.googleusercontent.com",
       "eas": {
         "projectId": "89d3b71d-0000-4152-9b72-26e45744828b"
       }
